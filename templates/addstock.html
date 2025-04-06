@@ -34,35 +34,37 @@
             z-index: -1;
         }
 
-        .nav-bar {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 15px 30px;
-          background-color: white;
-          box-shadow: 0 2px 10px rgba(26, 86, 219, 0.1);
-          margin-bottom: 20px;
-          border-radius: 0;
-          width: 100%;
-          position: relative;
+   /* Top Navigation Bar */
+        .top_nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(26, 86, 219, 0.1);
+            border-radius: 12px;
+            max-width: 1200px;
+            margin: 20px auto;
+            width: 100%;
         }
 
-        .nav-logo {
-          font-size: 20px;
-          font-weight: 700;
-          color: var(--primary);
-          display: flex;
-          align-items: center;
-          gap: 8px;
+        .nav_logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 15px;
         }
 
-        .nav-actions {
-          display: flex;
-          justify-content: flex-end;
-          flex-grow: 1;
+        .nav_actions {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
         }
 
-        .logout-button {
+        .logout_button {
           padding: 10px 16px;
           background-color: var(--primary);
           color: white;
@@ -77,7 +79,7 @@
           transition: all 0.2s ease;
         }
 
-        .logout-button:hover {
+        .logout_button:hover {
           background-color: var(--primary-dark);
           transform: translateY(-1px);
         }
@@ -168,16 +170,16 @@
 </head>
 <body>
 
-    <!-- Top Navigation Bar -->
-    <div class="nav-bar">
-      <div class="nav-logo">
-        <i class="fas fa-chart-line"></i> EasyFinance
-      </div>
-      <div class="nav-actions">
-        <button id="logoutButton" class="logout-button">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
+<!-- Top Navigation Bar with Back and Logout Buttons -->
+    <div class="top_nav">
+        <div class="nav_logo">
+            <i class="fas fa-chart-line"></i> EasyFinance
+        </div>
+        <div class="na_actions">
+            <button id="logoutButton" class="logout_button">
+            <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
     </div>
 
     <!-- Background Banner -->
