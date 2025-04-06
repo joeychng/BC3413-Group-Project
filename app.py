@@ -10,6 +10,8 @@ import os
 import yfinance as yf
 import matplotlib.pyplot as plt
 import io
+import re
+import hashlib
 import base64
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
@@ -34,6 +36,188 @@ def homepage():
     if request.method == 'POST':
         return redirect(url_for('homepage'))
     return render_template('homepage.html')
+
+# Register & Login -----------------------------------------------------------------------------
+class User:
+    def __init__(self, db_name='portfolio.db'):
+        self.conn = sqlite3.connect(db_name)
+        self.cursor = self.conn.cursor()
+        self.current_user_id = None # Stored Logged-in user ID
+
+        self.conn.commit()
+
+    def hash_password(self, password):
+        return hashlib.sha256(password.encode()).hexdigest()
+
+    def is_strong_password(self, password):
+        if (len(password) >= 8 and
+                re.search(r"[A-Z]", password) and
+                re.search(r"[a-z]", password) and
+                re.search(r"[0-9]", password) and
+                re.search(r"[!@#$%^&*(),.?\":{}|<>]", password)):
+            return True
+        return False
+
+    def register_user(self, username, password, security_question, security_answer):
+        hashed_password = self.hash_password(password)
+        hashed_answer = self.hash_password(security_answer)
+
+        self.cursor.execute(
+            "INSERT INTO users (username, password, security_question, security_answer) VALUES (?, ?, ?, ?)",
+            (username, hashed_password, security_question, hashed_answer))
+        self.conn.commit()
+
+    def login_user(self, username, password):
+        hashed_password = self.hash_password(password)
+        self.cursor.execute("SELECT * FROM users WHERE username = ? AND password = ?", (username, hashed_password))
+        user = self.cursor.fetchone()
+
+        if user:
+            self.current_user_id = username  # Store logged-in username
+            return True
+        return False
+
+    def get_user_by_username(self, username):
+        self.cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        return self.cursor.fetchone()
+
+    def reset_password(self, username, new_password):
+        hashed_new_password = self.hash_password(new_password)
+        self.cursor.execute("UPDATE users SET password = ? WHERE username = ?", (hashed_new_password, username))
+        self.conn.commit()
+
+    def fetch_risk_tolerance(self, username):
+        self.cursor.execute("SELECT risk_tolerance FROM users WHERE username = ?", (username,))
+        result = self.cursor.fetchone()
+        if not result or result[0] is None:
+            default_tolerance = 'Medium'
+            self.cursor.execute('''
+                    UPDATE users SET risk_tolerance = ? WHERE username = ?
+                ''', (default_tolerance, username))
+            self.conn.commit()
+            return default_tolerance
+
+        return result[0]  # Return the existing risk tolerance
+
+    def update_risk_tolerance(self, username, new_risk_tolerance):
+        self.cursor.execute("UPDATE users SET risk_tolerance = ? WHERE username = ?", (new_risk_tolerance, username))
+        self.conn.commit()
+
+#==============
+# Homepage
+#==============
+@app.route('/', methods=['GET', 'POST'])
+def homepage():
+    init_db()
+    if request.method == 'POST':
+        return redirect(url_for('homepage'))
+    return render_template('homepage.html')
+
+#==============
+# Register
+#==============
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        security_question = request.form['security_question']
+        security_answer = request.form['security_answer']
+        username_error= None
+        password_error = None
+        user = User()
+        if user.get_user_by_username(username):
+            username_error="Username already exists. Please try registering with another username."
+            if not user.is_strong_password(password):
+                password_error = "Weak password. Please follow the guidelines."
+        else:
+            if user.is_strong_password(password):
+                user.register_user(username, password, security_question, security_answer)
+                return render_template('login.html')  # Redirect to login after registration
+            else:
+                password_error = "Weak password. Please follow the guidelines."
+        return render_template('register.html', username_error=username_error, password_error=password_error)
+    return render_template('register.html')
+
+#==============
+# Login
+#==============
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = User()
+        session['login_username'] = username
+        if request.form.get('forget_password') == 'true':
+            return redirect(url_for('forget_password'))
+        elif user.login_user(username, password):
+            return redirect(url_for('dashboard', username=username))  # Redirect to page after successful login
+        else:
+            return render_template('login.html', error="Invalid credentials, please try again.", )
+    return render_template('login.html')
+
+@app.route('/forget_password', methods=['GET', 'POST'])
+def forget_password():
+    username_error = None
+    if request.method == 'POST':
+        username = request.form['username']
+        user = User()
+        if user.get_user_by_username(username):
+            session['forget_username'] = username  # ✅ Store username in session
+            return redirect(url_for('test'))
+        else:
+            username_error = "Username does not exist."
+    return render_template('forget_password.html', username_error=username_error)
+
+@app.route('/test', methods=['GET', 'POST'])
+def test():
+    security_ans_error = None
+    security_question = None
+    user = User()
+    username = session.get('forget_username')
+
+    if not username:
+        return redirect(url_for('forget_password'))  # If no username, go back
+
+        # Get the security question for the username
+    user.cursor.execute("SELECT security_question FROM users WHERE username = ?", (username,))
+    security = user.cursor.fetchone()
+    if security:
+        security_question = security[0]
+        if request.method == 'POST':
+            security_answer = request.form['security_answer']
+            hashed_answer = user.hash_password(security_answer)
+
+            user.cursor.execute("SELECT * FROM users WHERE username = ? AND security_answer = ?",
+                                (username, hashed_answer))
+            if user.cursor.fetchone():
+                return render_template('reset_password.html', security_question=security_question)
+
+            else:
+                security_ans_error = "Incorrect answer to the security question. Please try again."
+
+    return render_template('test.html', security_question=security_question, security_ans_error=security_ans_error)
+
+@app.route('/reset_password', methods=['GET', 'POST'])
+def reset_password():
+    password_error = None
+    user = User()
+    username = session.get('forget_username')
+    if not username:
+        return redirect(url_for('forget_password'))
+
+    if request.method == 'POST':
+        new_password = request.form['new_password']
+        print(new_password)
+        if user.is_strong_password(new_password):
+            user.reset_password(username, new_password)
+            session.pop('forget_username', None)
+            print("yellow")
+            return redirect(url_for('login'))
+        else:
+            password_error = "Weak password. Please follow the guidelines."
+    return render_template('reset_password.html', password_error=password_error)
 
 #Dashboard ---------------------------------------------------------------------------------
 @app.route("/dashboard/<username>")
@@ -163,6 +347,21 @@ def import_portfolio(username):
 
     return redirect(url_for("dashboard", username=username))
 
+# Risk Tolerance -----------------------------------------------------------------
+@app.route('/dashboard/<username>/risk_tolerance', methods=['GET', 'POST'])
+def risk_tolerance(username):
+    user = User()
+    username = session.get('login_username')
+    new_risk_tolerance = None
+
+    if request.method == 'POST':
+        new_risk_tolerance = request.form['risk_tolerance']
+        user.update_risk_tolerance(username, new_risk_tolerance)
+        print(new_risk_tolerance)
+    else:
+        new_risk_tolerance = user.fetch_risk_tolerance(username)
+    return render_template('risk_tolerance.html', risk_tolerance=new_risk_tolerance, username=username)
+    
 # Log out -----------------------------------------------------------------
 @app.route("/logout", methods=["POST"])
 def logout():
