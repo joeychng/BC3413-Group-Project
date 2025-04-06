@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <title>User Guide</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1e429f;
+            --primary-light: #3b82f6;
+            --primary-lighter: #93c5fd;
+            --primary-lightest: #dbeafe;
+            --text-on-primary: #ffffff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
+
+        body {
+            background-color: #f0f5ff;
+            color: var(--gray-800);
+            padding: 20px;
+            min-height: 100vh;
+            background-image: linear-gradient(135deg, #f0f5ff 0%, #e0eafc 100%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(26, 86, 219, 0.1);
+            overflow: hidden;
+            border: 1px solid rgba(26, 86, 219, 0.05);
+        }
+
+        /* Header styles */
+        .header {
+            padding: 30px;
+            background: linear-gradient(to right, var(--primary), var(--primary-dark));
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        .title::after {
+            content: "";
+            display: block;
+            width: 60px;
+            height: 4px;
+            background-color: var(--primary-lighter);
+            margin-top: 8px;
+            border-radius: 2px;
+        }
+
+        .description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 16px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .controls {
+            background-color: white;
+            padding: 20px 30px;
+            border-bottom: 1px solid var(--primary-lightest);
+        }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 42px;
+            border: 2px solid var(--gray-200);
+            border-radius: 8px;
+            font-size: 15px;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-400);
+            font-size: 16px;
+        }
+
+        /* Table styles */
+        .table-container {
+            overflow-x: auto;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background-color: var(--primary-lightest);
+        }
+
+        th {
+            text-align: left;
+            padding: 16px;
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-bottom: 2px solid var(--primary-lighter);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s ease;
+        }
+
+        th:hover {
+            background-color: rgba(59, 130, 246, 0.15);
+        }
+
+        th.sortable {
+            position: relative;
+        }
+
+        th.sortable:after {
+            content: "↕";
+            margin-left: 5px;
+            font-size: 12px;
+            opacity: 0.5;
+        }
+
+        th.sorted-asc:after {
+            content: "↑";
+            opacity: 1;
+        }
+
+        th.sorted-desc:after {
+            content: "↓";
+            opacity: 1;
+        }
+
+        th[data-align="right"] {
+            text-align: right;
+        }
+
+        td {
+            padding: 16px;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background-color 0.15s ease;
+        }
+
+        td[data-align="right"] {
+            text-align: right;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background-color: var(--primary-lightest);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .ticker-cell {
+            font-weight: 600;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ticker-icon {
+            width: 28px;
+            height: 28px;
+            background-color: var(--primary-lightest);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: var(--gray-500);
+            font-size: 16px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+                /* Back Button Styling */
+        .back-button {
+            padding: 10px 16px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: fixed;  /* Fixed button at the bottom */
+            bottom: 20px;
+            left: 20px;       /* Positioned at the left */
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        /* Navigation bar */
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(26, 86, 219, 0.1);
+            margin-bottom: 20px;
+            border-radius: 12px;
+            max-width: 1200px;
+            margin: 0 auto 20px auto;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .form-button {
+            background: #026CDF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .form-button:hover {
+            background: #0056b3;
+        }
+
+        .logout-button {
+            padding: 10px 16px;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        thead {
+            background-color: var(--primary-lightest);
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f3f3f3;
+        }
+
+        .no-results {
+            margin-top: 15px;
+            color: #d00;
+            font-weight: bold;
+        }
+
+        .logout-button:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive styles */
+        @media (max-width: 768px) {
+            .company-col, .sell-date-col {
+                display: none;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .controls {
+                padding: 15px;
+            }
+
+            td, th {
+                padding: 12px;
+            }
+
+            .title {
+                font-size: 24px;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-logo">
+            <i class="fas fa-chart-line"></i> EasyFinance
+        </div>
+        <div class="nav-actions">
+            <button id="logoutButton" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">User Guide</h1>
+            <p class="description"><strong>Welcome to EasyFinance where we will help you manage your stock investments efficiently.
+            EasyFinance is an easy-to-use interface for tracking stock investments and making informed financial decisions.</strong></p>
+         <ul>
+            <li><strong>Add Stock to Portfolio:</strong> Enter a stock ticker and the number of shares to purchase.</li>
+            <li><strong>Remove Stock from Portfolio:</strong> Specify a stock ticker and the number of shares to remove.</li>
+            <li><strong>View Portfolio:</strong> Displays your current stock holdings, including quantities, purchase prices, live price, and realized profit/loss. As well as a pie chart for portfolio allocation.</li>
+            <li><strong>View Past Transactions:</strong> Access to historical stock transactions, including purchases, sales, realized profit/loss, and unrealized profit/loss.</li>
+            <li><strong>Fetch Stock Info:</strong> Enter a stock ticker to retrieve details such as book value, market cap, trailing PE, and forward PE. View the stock prices for the last 6 months to observe any trend.</li>
+            <li><strong>Update Risk Tolerance:</strong> View your current risk tolerance and modify it to adjust the risk threshold for stock recommendations.</li>
+            <li><strong>Import Portfolio:</strong> Import a CSV file if you have an existing portfolio for easier access.</li>
+        </ul>
+        </div>
+
+    <div class="controls">
+        <div class="search-container">
+            <!-- Search Box with Icon -->
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="searchInput" name="company_name" placeholder="Search company..." value="{{ query }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results Section -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th class="sortable" data-column="ticker">Ticker</th>
+                <th class="company-col">Company</th>
+                <th class="company-col">Industry</th>
+            </tr>
+        </thead>
+        <tbody id="transactionTableBody">
+            <!-- Rows will be added here by JavaScript -->
+        </tbody>
+    </table>
+    </div>
+        <!-- Back Button -->
+    <button class="back-button" onclick="window.history.back()">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+<script>
+
+    // Dummy data
+        const dummy_data = [
+            {"ticker": "ADVS", "name": "Advent Software.", "industry": "Technology"},
+            {"ticker": "BVSN", "name": "Broadvision", "industry": "Technology"},
+            {"ticker": "HAV", "name": "Helios Advantage", "industry": "Technology"},
+            {"ticker": "NAD", "name": "Nuveen Divadv Fund", "industry": "Finance"}
+        ];
+
+        // Function to populate the table with dummy data
+        const tableBody = document.getElementById('transactionTableBody');
+
+        // Loop through dummy data and create table rows
+        dummy_data.forEach(entry => {
+            const row = document.createElement('tr');
+
+            const tickerCell = document.createElement('td');
+            tickerCell.textContent = entry.ticker;
+            row.appendChild(tickerCell);
+
+            const nameCell = document.createElement('td');
+            nameCell.textContent = entry.name;
+            row.appendChild(nameCell);
+
+            const industryCell = document.createElement('td');
+            industryCell.textContent = entry.industry;
+            row.appendChild(industryCell);
+
+            tableBody.appendChild(row);
+        });
+
+            // Optionally auto-fill the form fields (for demo purposes)
+            document.getElementById('searchInput').value = "ADV";
+
+        // Logout button functionality
+        document.getElementById('logoutButton').addEventListener('click', function() {
+            if (confirm('Are you sure you want to logout?')) {
+                alert('Logged out successfully!');
+                // In a real application, you would redirect to login page or clear session
+                // window.location.href = 'login.html';
+            }
+        });
+
+</script>
+</body></html>
