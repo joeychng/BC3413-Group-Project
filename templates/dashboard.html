@@ -285,7 +285,7 @@
                     <a href="#">Add/Remove Stock</a>
                     <a href="#">View Past Transactions</a>
                     <a href="#">Fetch Stock Information</a>
-                    <a href="#">Change Risk Tolerance</a>
+                    <a href="{{ url_for('risk_tolerance', username=session.get('login_username')) }}">Change Risk Tolerance</a>
                 </div>
             </div>
 {#            {% if session.get('username') %} #Currently have not linked the login function#}
