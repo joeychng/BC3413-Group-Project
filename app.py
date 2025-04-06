@@ -213,6 +213,67 @@ def generate_chart_base64(ticker):
     plt.close()
     return base64_img
 
+#User Guide page
+@app.route('/userguide', methods=['GET', 'POST'])
+def userguide():
+    dummy_data = [
+        {"ticker": "ADVS", "name": "Advent Software.", "industry": "Technology"},
+        {"ticker": "BVSN", "name": "Broadvision", "industry": "Technology"},
+        {"ticker": "HAV", "name": "Helios Advantage", "industry": "Technology"},
+        {"ticker": "NAD", "name": "Nuveen Divadv Fund", "industry": "Finance"}
+    ]
+    query = request.form.get('company_name', '')  # Get search query from form
+    results = []
+
+    if query:
+        # Filter data based on the query
+        results = [entry for entry in dummy_data if query.lower() in entry['name'].lower()]
+
+    return render_template('userguide.html', query=query, results=results)
+
+# Function to add stock 
+def add_stock_to_db(ticker, shares, purchase_date, purchase_price):
+    conn = init_db()
+    live_price = fetch_stock_data(ticker)  # Assuming this function fetches current stock price
+    unrealized_pnl = (live_price - purchase_price) * shares
+
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO portfolios (ticker, shares, purchase_date, purchase_price, unrealized_profit_loss)
+        VALUES (?, ?, ?, ?, ?)
+    ''', (ticker, shares, purchase_date, purchase_price, unrealized_pnl))
+
+    conn.commit()
+    conn.close()
+
+@app.route('/addstock', methods=['GET', 'POST'])
+def addstock():
+    if request.method == 'POST':
+        ticker = request.form['ticker']
+        shares = int(request.form['shares'])
+        purchase_date = request.form['purchase_date']
+        purchase_price = float(request.form['purchase_price'])
+
+        add_stock_to_db(ticker, shares, purchase_date, purchase_price)
+
+        return redirect(url_for('homepage'))  # Redirect to the homepage after form submission
+
+    return render_template('addstock.html')
+
+@app.route('/removestock', methods=['GET', 'POST'])
+def removestock():
+    if request.method == 'POST':
+        ticker = request.form['ticker']
+        shares = int(request.form['shares'])
+        purchase_date = request.form['sale_date']
+        purchase_price = float(request.form['sale_price'])
+
+        add_stock_to_db(ticker, shares, sale_date, sale_price)
+
+    return render_template('removestock.html')
+
+
+#Stock Information
 def recommend_stocks(ticker, risk_tolerance):
     stock_data = fetch_stock_data(ticker)
     risk_info = calculate_risk_info(stock_data)
