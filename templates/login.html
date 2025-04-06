@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+        html, body {
+            margin: 0;            /* Remove any default margin */
+            padding: 0;           /* Remove any default padding */
+            width: 100%;          /* Set width to 100% of the viewport */
+            height: 100%;         /* Set height to 100% of the viewport */
+            overflow-x: hidden;   /* Prevent horizontal scrolling */
+        }
+
+        body {
+            background: #F9FAFF;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Top Navigation Bar */
+        .top_nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 15px 30px;
+            margin: 0 0 50px;
+            box-shadow: 0 0 5px 0 black;
+            background: white;
+            position: sticky;
+        }
+
+        .nav_logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a56db;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 15px;
+        }
+
+        .fas {
+            -webkit-font-smoothing: antialiased;
+            font-style: normal;
+            font-variant: normal;
+            font-weight: 900;
+            font-family: "Font Awesome 6 Free";
+            line-height: 1;
+            text-rendering: auto;
+        }
+
+        .fa-chart-line:before {
+            content: "\f201";
+        }
+
+        /* Input Box */
+        .box {
+            background-color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 10px auto;
+            top: 20px;
+            max-width: 360px;
+            width: 90%;
+            align-items: center;
+            display: inline-block;
+            position: static;
+            text-align: left;
+        }
+
+        .box_label {
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .box_input input {
+            width: 340px;
+            max-width: 370px;
+            height: 40px;
+            border: 1px solid rgba(201, 201, 201, 1);
+            border-radius: 5px;
+            box-sizing: border-box;
+            padding: 5px;
+            display: flex;
+            justify-content: center;
+            font-size: 15px;
+            color: rgba(71, 71, 71, 1);
+            text-align: left;
+        }
+
+        .login_button {
+            width: 100%;
+            max-width: 330px;
+            height: 45px;
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: #0044cc;
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
+            font-size: 15px;
+            color: white;
+            text-align: center;
+        }
+
+        .login_button:hover {
+            background: rgba(14, 76, 171, 1);
+            color: white;
+        }
+
+        h1 {
+            font-family: 'Roboto', sans-serif;
+            font-size: 25px;
+            color: #0044cc;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 18px;
+            text-align: center;
+            line-height: 20px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        a {
+            color: #0044cc
+        }
+
+        a:hover{
+            color: rgba(133, 130, 130, 1)
+        }
+
+        /* Responsive design */
+    @media (max-width: 768px) {
+        .box {
+            width: 95%; /* Take up more width on small screens */
+            padding: 15px;
+        }
+        .box_input input {
+            max-width: 100%; /* Let input take full width on small screens */
+        }
+        .login_button {
+            max-width: 100%;  /* Full width on small screens */
+        }
+    }
+
+    </style>
+</head>
+<body>
+   <!-- Top Navigation Bar -->
+    <div class="top_nav">
+        <div class="nav_logo">
+             <i class="fas fa-chart-line"></i>EasyFinance
+        </div>
+    </div>
+
+    <h1>Log in to EasyFinance</h1>
+    <h2>Welcome back to EasyFinance!</h2>
+
+    <form id="login-form" action="{{ url_for('login') }}" method="POST">
+        <div class="box">
+            <div class="box_label">Username</div>
+            <div class="box_input"><input id="username" name="username" type="text" placeholder="Enter Username" required></div>
+            <div class="box_label">Password</div>
+            <div class="box_input"><input id="password" name="password" type="password" placeholder="Enter Strong Password" required>
+                {% if error %}
+                    <p style="color: red; font-size: 13px; text-align: left; margin: 5px 0 10px 0;">{{ error }}</p>
+                {% endif %}
+            </div>
+            <p>
+                <a href="/forget_password" style="text-align: left;">Forget password?</a>
+            </p>
+            <button class="login_button" id="login_account" type="submit">Log in</button>
+        </div>
+    </form>
+    <p id="register_redirect">Not registered?
+        <a href="/register">Register</a>
+    </p>
+</body>
+</html>
