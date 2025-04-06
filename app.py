@@ -272,8 +272,45 @@ def removestock():
 
     return render_template('removestock.html')
 
+#Transaction history --------------------------------------------------------------------------------------------------
+@app.route('/transaction_history')
+def transaction_history():
+    session['username'] = 'mary'
+    conn = init_db()
+    cursor = conn.cursor()
+    cursor.execute('''
+        SELECT purchase_date, ticker, shares, purchase_price,
+               sale_date, sale_price, realized_profit_loss
+        FROM portfolios
+        WHERE username = ?
+        ORDER BY purchase_date DESC
+    ''', (session['username'],))
 
-#Stock Information
+    rows = cursor.fetchall()
+    conn.close()
+
+    # Format as list of dictionaries
+    data = []
+    for row in rows:
+        (purchase_date, ticker, shares, buy_price, sell_date, sell_price, realized_pl) = row
+        trans_type = 'Buy' if shares > 0 else 'Sell'
+        unrealised_pl = 0.0 if sell_price else (fetch_stock_data(ticker).get('Bid', 0) - buy_price) * shares
+        data.append({
+            'purchase_date': purchase_date,
+            'ticker': ticker,
+            'company': get_company_name(ticker),  # Use the function to get company name
+            'type': trans_type,
+            'shares': abs(shares),
+            'buy_price': buy_price if shares > 0 else '',
+            'sell_date': sell_date or '',
+            'sell_price': sell_price or '',
+            'realised_pl': realized_pl or '',
+            'unrealised_pl': round(unrealised_pl, 2) if not sell_price else ''
+        })
+
+    return render_template("transaction_history.html", transactions=data)
+
+#Stock Information--------------------------------------------------------------------------------------------------
 def recommend_stocks(ticker, risk_tolerance):
     stock_data = fetch_stock_data(ticker)
     risk_info = calculate_risk_info(stock_data)
