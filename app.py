@@ -383,8 +383,8 @@ def get_stock_info():
         if chart_base64 is None:
             return jsonify({"error": "Chart could not be generated."}), 500
 
-    # Render the template and pass the data to it
-        return render_template("fetch_stock_info", stock_data=stock_data, chart=chart_base64)
+        # Return the stock data and chart in JSON format
+        return jsonify({"stock_data": stock_data, "chart": chart_base64})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
