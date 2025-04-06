@@ -354,43 +354,7 @@ def risk_tolerance(username):
     return render_template('risk_tolerance.html', risk_tolerance=new_risk_tolerance, username=username)
     
 
-def fetch_stock_data(ticker):
-    stock = yf.Ticker(ticker)
-    info = stock.info
-    hist = stock.history(period="1y")
-    returns = hist['Close'].pct_change().dropna()
-    return {
-        'Ticker': ticker,
-        'Company': info.get('shortName', 'N/A'),
-        'Sector': info.get('sector', 'N/A'),
-        'Industry': info.get('industry', 'N/A'),
-        'Market Cap': info.get('marketCap', 'N/A'),
-        'Previous Close': info.get('previousClose', 'N/A'),
-        'Trailing PE': info.get('trailingPE', 'N/A'),
-        'Forward PE': info.get('forwardPE', 'N/A'),
-        'Returns': returns.to_dict()  # Optional, if you want to send it
-    }
 
-def generate_chart_base64(ticker):
-    stock = yf.Ticker(ticker)
-    history = stock.history(period="6mo")
-
-    if history.empty:
-        return None
-
-    plt.figure(figsize=(10, 5))
-    plt.plot(history.index, history['Close'], label=f"{ticker} Price", color="blue")
-    plt.title(f"{ticker} Stock Price (Last 6 Months)")
-    plt.xlabel("Date")
-    plt.ylabel("Closing Price ($)")
-    plt.legend()
-
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    base64_img = base64.b64encode(buf.read()).decode('utf-8')
-    plt.close()
-    return base64_img
 
 #User Guide page
 @app.route('/userguide', methods=['GET', 'POST'])
@@ -490,6 +454,44 @@ def transaction_history():
     return render_template("transaction_history.html", transactions=data)
 
 #Stock Information--------------------------------------------------------------------------------------------------
+def fetch_stock_data(ticker):
+    stock = yf.Ticker(ticker)
+    info = stock.info
+    hist = stock.history(period="1y")
+    returns = hist['Close'].pct_change().dropna()
+    return {
+        'Ticker': ticker,
+        'Company': info.get('shortName', 'N/A'),
+        'Sector': info.get('sector', 'N/A'),
+        'Industry': info.get('industry', 'N/A'),
+        'Market Cap': info.get('marketCap', 'N/A'),
+        'Previous Close': info.get('previousClose', 'N/A'),
+        'Trailing PE': info.get('trailingPE', 'N/A'),
+        'Forward PE': info.get('forwardPE', 'N/A'),
+        'Returns': returns.to_dict()  # Optional, if you want to send it
+    }
+
+def generate_chart_base64(ticker):
+    stock = yf.Ticker(ticker)
+    history = stock.history(period="6mo")
+
+    if history.empty:
+        return None
+
+    plt.figure(figsize=(10, 5))
+    plt.plot(history.index, history['Close'], label=f"{ticker} Price", color="blue")
+    plt.title(f"{ticker} Stock Price (Last 6 Months)")
+    plt.xlabel("Date")
+    plt.ylabel("Closing Price ($)")
+    plt.legend()
+
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    buf.seek(0)
+    base64_img = base64.b64encode(buf.read()).decode('utf-8')
+    plt.close()
+    return base64_img
+
 def recommend_stocks(ticker, risk_tolerance):
     stock_data = fetch_stock_data(ticker)
     risk_info = calculate_risk_info(stock_data)
