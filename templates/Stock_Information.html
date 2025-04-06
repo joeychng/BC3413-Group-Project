@@ -202,30 +202,18 @@
                 })
                 .catch(error => console.error("Logout error:", error));
         });
-
         // Handle "View Stock Recommendations" Button
         document.getElementById("view-recommendations-button").addEventListener("click", function() {
-            const ticker = document.getElementById("ticker").value.trim();
-            if (!ticker) {
-                alert("Please enter a stock ticker first!");
-                return;
-            }
-
-            // Redirect to the Stock Recommendations page with the ticker symbol
-            window.location.href = `/get_stock_recommendation_and_metrics?ticker=${ticker}`;
+            // Redirect to the Stock Recommendations page
+            window.location.href = "/get_stock_info";
         });
-
+        
         // Handle "View Market Sentiments" Button
         document.getElementById("view-market-sentiments-button").addEventListener("click", function() {
-            const ticker = document.getElementById("ticker").value.trim();
-            if (!ticker) {
-                alert("Please enter a stock ticker first!");
-                return;
-            }
-
-            // Redirect to the Market Sentiment page with the ticker symbol
-            window.location.href = `/get_market_sentiment?ticker=${ticker}`;
+            // Redirect to the Market Sentiment page
+            window.location.href = "/get_market_sentiments";
         });
+
     </script>
 
 </body>
