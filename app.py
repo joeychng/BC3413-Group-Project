@@ -268,51 +268,28 @@ def format_headline_data(sentiment_scores):
             "url": url
         })
     return data
-@app.route('/')
-def index():
-    return render_template('Stock_information.html')  # This serves the HTML page
 
-@app.route('/get_stock_info')
+@app.route("/stock_info")
+def stock_info():
+    return render_template("Stock_Information.html")
+
+@app.route("/get_stock_info")
 def get_stock_info():
-    ticker_symbol = request.args.get('ticker', '').upper()
-    if not ticker_symbol:
-        return jsonify({'error': 'No ticker provided'}), 400
+    ticker = request.args.get("ticker", "").upper()
+    if not ticker:
+        return jsonify({"error": "Missing ticker symbol"}), 400
 
     try:
-        stock = yf.Ticker(ticker_symbol)
-        info = stock.info
+        stock_data = fetch_stock_data(ticker)
+        chart_base64 = generate_chart_base64(ticker)
+        if chart_base64 is None:
+            return jsonify({"error": "Chart could not be generated."}), 500
 
-        stock_data = {
-            'Ticker': ticker_symbol,
-            'Company': info.get('longName', 'N/A'),
-            'Sector': info.get('sector', 'N/A'),
-            'Industry': info.get('industry', 'N/A'),
-            'Market Cap': info.get('marketCap', 'N/A'),
-            'Previous Close': info.get('previousClose', 'N/A'),
-            'Trailing PE': info.get('trailingPE', 'N/A'),
-            'Forward PE': info.get('forwardPE', 'N/A'),
-        }
-
-        # Generate chart
-        hist = stock.history(period="6mo")
-        plt.figure(figsize=(10, 5))
-        plt.plot(hist.index, hist['Close'], label='Close Price')
-        plt.title(f'{ticker_symbol} Price - Last 6 Months')
-        plt.xlabel('Date')
-        plt.ylabel('Price ($)')
-        plt.grid(True)
-        plt.legend()
-
-        buf = io.BytesIO()
-        plt.savefig(buf, format='png')
-        plt.close()
-        buf.seek(0)
-        chart_base64 = base64.b64encode(buf.read()).decode('utf-8')
-
-        return jsonify({'stock_data': stock_data, 'chart': chart_base64})
+    # Render the template and pass the data to it
+        return render_template("fetch_stock_info", stock_data=stock_data, chart=chart_base64)
 
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route('/get_stock_recommendation_and_metrics')
