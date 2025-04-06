@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Information Results</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* (Your existing CSS here) */
+    </style>
+</head>
+<body>
+
+    <!-- Top Navigation Bar -->
+    <div class="nav-bar">
+        <div class="nav-logo">
+            <i class="fas fa-chart-line"></i> EasyFinance
+        </div>
+        <div class="nav-actions">
+            <button id="logoutButton" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </div>
+
+    <!-- Banner (Background Image) -->
+    <div class="banner"></div>
+
+    <!-- Stock Information Result -->
+    <div class="container">
+        <h2>Stock Information</h2>
+        <div id="stock-info">
+            <h3>Stock Information:</h3>
+            <p><strong>Ticker:</strong> <span id="ticker-info"></span></p>
+            <p><strong>Company Name:</strong> <span id="company-info"></span></p>
+            <p><strong>Sector:</strong> <span id="sector-info"></span></p>
+            <p><strong>Industry:</strong> <span id="industry-info"></span></p>
+            <p><strong>Market Cap:</strong> <span id="market-cap-info"></span></p>
+            <p><strong>Previous Close:</strong> <span id="previous-close-info"></span></p>
+            <p><strong>Trailing PE:</strong> <span id="trailing-pe-info"></span></p>
+            <p><strong>Forward PE:</strong> <span id="forward-pe-info"></span></p>
+
+            <!-- Stock Chart (Added Dynamically) -->
+            <div id="stock-chart-container" style="margin-top: 20px;">
+                <h3>Stock Price Chart (Last 6 Months)</h3>
+                <img id="stock-chart" src="" alt="Stock Price Chart" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+
+        <!-- Additional Buttons -->
+        <button class="form-button" id="view-recommendations-button" type="button">View Stock Recommendations</button>
+        <button class="form-button" id="view-market-sentiments-button" type="button">View Market Sentiments</button>
+    </div>
+
+    <script>
+        // Get ticker from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const ticker = urlParams.get('ticker');
+
+        if (!ticker) {
+            alert("No ticker found!");
+            window.location.href = "/";  // Redirect back to the first page
+        }
+
+        // Fetch stock data using the ticker
+        fetch(`/get_stock_info?ticker=${ticker}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert("Failed to fetch stock information.");
+                    return;
+                }
+
+                // Display the stock info
+                const stockData = data.stock_data;
+                document.getElementById("ticker-info").textContent = stockData.Ticker;
+                document.getElementById("company-info").textContent = stockData.Company;
+                document.getElementById("sector-info").textContent = stockData.Sector;
+                document.getElementById("industry-info").textContent = stockData.Industry;
+                document.getElementById("market-cap-info").textContent = stockData['Market Cap'];
+                document.getElementById("previous-close-info").textContent = stockData['Previous Close'];
+                document.getElementById("trailing-pe-info").textContent = stockData['Trailing PE'];
+                document.getElementById("forward-pe-info").textContent = stockData['Forward PE'];
+
+                // Display the stock chart
+                const chartData = data.chart;
+                const imgElement = document.getElementById("stock-chart");
+                imgElement.src = `data:image/png;base64,${chartData}`;  // Embed the image directly
+            })
+            .catch(error => {
+                console.error("Error fetching stock data:", error);
+            });
+
+        // Logout functionality
+        document.getElementById("logoutButton").addEventListener("click", function() {
+            fetch('/logout', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert("You have been logged out.");
+                        window.location.href = "/login"; // Redirect to login page
+                    } else {
+                        alert("Logout failed.");
+                    }
+                })
+                .catch(error => console.error("Logout error:", error));
+        });
+
+        // Handle "View Stock Recommendations" Button
+        document.getElementById("view-recommendations-button").addEventListener("click", function() {
+            const ticker = urlParams.get('ticker');
+            if (!ticker) {
+                alert("Please enter a stock ticker first!");
+                return;
+            }
+
+            // Redirect to the Stock Recommendations page with the ticker symbol
+            window.location.href = `/get_stock_recommendation_and_metrics?ticker=${ticker}`;
+        });
+
+        // Handle "View Market Sentiments" Button
+        document.getElementById("view-market-sentiments-button").addEventListener("click", function() {
+            const ticker = urlParams.get('ticker');
+            if (!ticker) {
+                alert("Please enter a stock ticker first!");
+                return;
+            }
+
+            // Redirect to the Market Sentiment page with the ticker symbol
+            window.location.href = `/get_market_sentiment?ticker=${ticker}`;
+        });
+    </script>
+
+</body>
+</html>
