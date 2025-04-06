@@ -24,7 +24,8 @@
     <div id="iekzi" class="logo"></div>
     <nav><a href="#hero">Home</a><a href="#features">Our Features</a><a href="#who-we-help">Who We Help</a></nav>
     <div>
-      <button type="button" id="ieeh7" class="btn btn-register">Register</button><button type="button" class="btn btn-login">Login</button>
+      <a href="{{ url_for('register') }}"><button type="button" id="ieeh7" class="btn btn-register" name="register_button">Register</button></a>
+        <a href="{{ url_for('login') }}"><button type="button" class="btn btn-login" name="login_button">Login</button></a>
     </div>
   </header>
   <main id="iewmh">
