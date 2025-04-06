@@ -332,6 +332,53 @@ def import_portfolio_from_csv(username, file_path):
     os.remove(file_path)  # Remove the file after processing
     return None  # Return None if no errors occurred
 
+##---------------------------------
+#Transaction History
+##---------------------------------
+
+        # Attempt to fetch data for the exact date
+        stock = yf.Ticker(ticker)
+        hist = stock.history(period="1d", start=date_str, end=(date + timedelta(days=1)).strftime('%Y-%m-%d'))
+
+        # If no data available, check previous trading days
+        while hist.empty:
+            date -= timedelta(days=1)  # Move to previous day
+            if date.weekday() in [5, 6]:  # Skip weekends (Saturday=5, Sunday=6)
+                date -= timedelta(days=2)
+
+            # Try fetching again
+            hist = stock.history(period="1d", start=date.strftime('%Y-%m-%d'),
+                                 end=(date + timedelta(days=1)).strftime('%Y-%m-%d'))
+
+            # Stop if checking too far back (e.g., 30 days ago)
+            if (datetime.today() - date).days > 30:
+                print("No valid historical data found in the last 30 days.")
+                return None
+
+        # Return the closing price of the last available trading day
+        return hist['Close'].iloc[0]
+
+    except Exception as e:
+        print(f"Error fetching historical price for {ticker}: {e}")
+        return None
+
+
+def get_company_name(ticker):def fetch_historical_price(ticker, date_str):
+    """
+    Fetch the historical closing price for a stock on a given date.
+    If no data is available for that date (weekend/holiday), fetch the last available trading day.
+    """
+    try:
+        # Convert date string to datetime object
+        date = datetime.strptime(date_str, "%Y-%m-%d")
+
+    try:
+        stock = yf.Ticker(ticker)
+        return stock.info.get("longName", ticker)  # Fallback to ticker if name is unavailable
+    except Exception as e:
+        print(f"Error fetching company name for {ticker}: {e}")
+        return ticker  # Return ticker as a fallback
+
 
 
 
