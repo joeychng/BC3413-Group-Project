@@ -103,15 +103,6 @@ class User:
         self.cursor.execute("UPDATE users SET risk_tolerance = ? WHERE username = ?", (new_risk_tolerance, username))
         self.conn.commit()
 
-#==============
-# Homepage
-#==============
-@app.route('/', methods=['GET', 'POST'])
-def homepage():
-    init_db()
-    if request.method == 'POST':
-        return redirect(url_for('homepage'))
-    return render_template('homepage.html')
 
 #==============
 # Register
@@ -362,17 +353,6 @@ def risk_tolerance(username):
         new_risk_tolerance = user.fetch_risk_tolerance(username)
     return render_template('risk_tolerance.html', risk_tolerance=new_risk_tolerance, username=username)
     
-# Log out -----------------------------------------------------------------
-@app.route("/logout", methods=["POST"])
-def logout():
-    # Clear the session
-    session.pop('username', None)
-
-    # Redirect to the homepage after logout
-    return redirect(url_for('homepage'))
-
-cache = {}
-cache_expired = timedelta(minutes=30)
 
 def fetch_stock_data(ticker):
     stock = yf.Ticker(ticker)
@@ -636,6 +616,18 @@ def market_sentiment():
         )
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+# Log out -----------------------------------------------------------------
+@app.route("/logout", methods=["POST"])
+def logout():
+    # Clear the session
+    session.pop('username', None)
+
+    # Redirect to the homepage after logout
+    return redirect(url_for('homepage'))
+
+cache = {}
+cache_expired = timedelta(minutes=30)
 
 if __name__ == '__main__':
     app.run(debug=True)
