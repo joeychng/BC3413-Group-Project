@@ -284,7 +284,8 @@
                     <a href="#import-portfolio-section">Import Portfolio</a>
                     <a href="#">Add/Remove Stock</a>
                     <a href="#">View Past Transactions</a>
-                    <a href="#">Fetch Stock Information</a>
+                    <a href="{{ url_for('info_menu') }}">Fetch Stock Information</a>
+                    <a href="{{ url_for('recommendation_menu') }}">View Stock Recommendation</a>
                     <a href="{{ url_for('risk_tolerance', username=session.get('login_username')) }}">Change Risk Tolerance</a>
                 </div>
             </div>
