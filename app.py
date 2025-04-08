@@ -564,10 +564,8 @@ def format_headline_data(sentiment_scores):
     return data
 
 @app.route("/info_menu")
-def stock_info():
+def info_menu():
     return render_template("stock_information.html")
-
-from flask import render_template
 
 @app.route("/get_stock_info")
 def get_stock_info():
