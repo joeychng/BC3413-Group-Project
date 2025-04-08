@@ -468,7 +468,7 @@ def fetch_stock_data(ticker):
         'Previous Close': info.get('previousClose', 'N/A'),
         'Trailing PE': info.get('trailingPE', 'N/A'),
         'Forward PE': info.get('forwardPE', 'N/A'),
-        'Returns': returns.to_dict()  # Optional, if you want to send it
+        'Returns': returns.to_dict()  
     }
 
 def generate_chart_base64(ticker):
@@ -522,7 +522,177 @@ def recommend_stocks(ticker, risk_tolerance):
         "recommendation": recommendation
     }
 
-def show_overall_results(ticker, sentiment_scores):
+def calculate_risk_info(stock_data):
+    returns_dict = stock_data.get('Returns')
+
+    if not returns_dict or len(returns_dict) == 0:
+        return {
+            "volatility": 0.0,
+            "sharpe_ratio": 0.0,
+            "var_95": 0.0
+        }
+
+    # Convert dict values to a list or NumPy array
+    return_values = np.array(list(returns_dict.values()))
+
+    # Volatility
+    volatility = np.std(return_values) * math.sqrt(252)
+
+    # Sharpe Ratio
+    avg_return = np.mean(return_values) * 252
+    risk_free_rate = 0.02
+    sharpe_ratio = (avg_return - risk_free_rate) / volatility if volatility != 0 else 0.0
+
+    # Value at Risk (VaR) at 95% confidence
+    confidence_level = 0.05
+    var_95 = norm.ppf(confidence_level, np.mean(return_values), np.std(return_values)) * 100
+
+    return {
+        "volatility": volatility,
+        "sharpe_ratio": sharpe_ratio,
+        "var_95": var_95
+    }
+
+def format_headline_data(sentiment_scores):
+    data = []
+    for headline, score, url in sentiment_scores:
+        data.append({
+            "headline": headline,
+            "score": round(score, 2),
+            "url": url
+        })
+    return data
+
+@app.route("/info_menu")
+def stock_info():
+    return render_template("stock_information.html")
+
+from flask import render_template
+
+@app.route("/get_stock_info")
+def get_stock_info():
+    ticker = request.args.get("ticker", "").upper()  # Retrieve the ticker from the query string
+    if not ticker:
+        return jsonify({"error": "Missing ticker symbol"}), 400  # Error if ticker is missing
+
+    try:
+        stock_data = fetch_stock_data(ticker)  # Fetch stock data based on the ticker
+        chart_base64 = generate_chart_base64(ticker)  # Generate a stock chart
+        if chart_base64 is None:
+            return jsonify({"error": "Chart could not be generated."}), 500  # Error if chart generation fails
+
+        # Render a new template and pass stock data and chart to it
+        return render_template(
+            "get_stock_info.html", 
+            stock_data=stock_data, 
+            chart=chart_base64,
+            ticker=ticker
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500  # Return error if something goes wrong
+
+@app.route('/recommendation_menu')
+def recommendation_menu():
+    return render_template("recommendation_menu.html")
+
+@app.route('/get_stock_recommendation')
+def get_stock_recommendation():
+    ticker = request.args.get("ticker", "").upper()  # Retrieve the ticker from the query string
+    if not ticker:
+        return jsonify({"error": "Missing ticker symbol"}), 400  # Error if ticker is missing
+
+    # Assuming fetch_stock_data and calculate_risk_info are defined elsewhere
+    stock_data = fetch_stock_data(ticker)
+    risk_info = calculate_risk_info(stock_data)
+    risk_tolerance = session.get('risk_tolerance', 'Medium')
+
+    if stock_data is None or risk_info is None:
+        return jsonify({"error": f"No P/E ratio or risk data available for {ticker}."})
+
+    pe_ratio = stock_data['Trailing PE']
+    industry_avg_pe = 20  # Assume industry avg P/E
+
+    if risk_tolerance == "Low":
+        sharpe_threshold = 1.5
+    elif risk_tolerance == "Medium":
+        sharpe_threshold = 1.0
+    else:
+        sharpe_threshold = 0.5
+
+    if pe_ratio < industry_avg_pe * 0.8 and risk_info["sharpe_ratio"] > sharpe_threshold:
+        recommendation = f"✅ {ticker} is undervalued and within your risk tolerance. Consider adding."
+    elif pe_ratio > industry_avg_pe * 1.2 or risk_info["sharpe_ratio"] < sharpe_threshold:
+        recommendation = f"⚠️ {ticker} may be overvalued or outside your risk tolerance. Consider avoiding."
+    else:
+        recommendation = f"⏸️ {ticker} is fairly valued and within risk tolerance. Consider holding."
+
+    return render_template(
+        "recommendations.html", 
+        stock_data=stock_data, 
+        risk_info=risk_info,
+        ticker=ticker,
+        recommendation=recommendation
+    )
+
+cache = {}
+cache_expired = timedelta(minutes=30)  # Adjust cache expiry time as needed
+
+# Define the function for getting market sentiment
+def get_market_sentiment(ticker):
+    url = f"https://finance.yahoo.com/quote/{ticker}/news"
+    headers = {"User-Agent": "Mozilla/5.0"}
+    response = requests.get(url, headers=headers)
+
+    if ticker in cache:
+        return cache[ticker]  # Return cached result if available
+
+    if response.status_code != 200:
+        return {"error": "Failed to fetch market sentiment."}
+
+    soup = BeautifulSoup(response.content, 'html.parser')
+
+    # Extract headlines and URLs
+    all_headlines = set()
+    all_urls = set()
+
+    for anchor in soup.find_all('a', href=True):
+        headline = anchor.get_text(strip=True)
+        url = anchor['href']
+        if ticker.upper() in headline.upper() and headline:
+            all_headlines.add(headline)
+            all_urls.add(f"{url}")
+
+    if not all_headlines:
+        return {"error": f"No news headlines found for {ticker}."}
+
+    headlines_with_urls = [(headline, url) for headline, url in zip(all_headlines, all_urls)]
+
+    # Sentiment analysis
+    analyzer = SentimentIntensityAnalyzer()
+    sentiment_scores = []
+
+    for headline, url in headlines_with_urls:
+        score = analyzer.polarity_scores(headline)['compound']
+        sentiment_scores.append((headline, score, url))
+
+    # Calculate overall sentiment by calling show_overall_results
+    overall_sentiment = show_overall_results(sentiment_scores)
+
+    # Cache the results without timestamp
+    cache[ticker] = {
+        'overall_sentiment': overall_sentiment['label'],
+        'sentiment_score': overall_sentiment['score'],
+        'headlines': [{"headline": h, "score": score, "url": u} for h, score, u in sentiment_scores]
+    }
+
+    return {
+        "overall_sentiment": overall_sentiment['label'],
+        "sentiment_score": overall_sentiment['score'],
+        "headlines": [{"headline": h, "score": score, "url": u} for h, score, u in sentiment_scores]
+    }
+
+def show_overall_results(sentiment_scores):
     if not sentiment_scores:
         return {"label": "Neutral", "score": 0}
 
@@ -538,86 +708,22 @@ def show_overall_results(ticker, sentiment_scores):
 
     return {"label": label, "score": avg_score}
 
-def format_headline_data(sentiment_scores):
-    data = []
-    for headline, score, url in sentiment_scores:
-        data.append({
-            "headline": headline,
-            "score": round(score, 2),
-            "url": url
-        })
-    return data
-
-@app.route("/stock_info")
-def stock_info():
-    return render_template("Stock_Information.html")
-
-@app.route("/get_stock_info")
-def get_stock_info():
-    ticker = request.args.get("ticker", "").upper()
-    if not ticker:
-        return jsonify({"error": "Missing ticker symbol"}), 400
-
-    try:
-        stock_data = fetch_stock_data(ticker)
-        chart_base64 = generate_chart_base64(ticker)
-        if chart_base64 is None:
-            return jsonify({"error": "Chart could not be generated."}), 500
-
-        # Return the stock data and chart in JSON format
-        return jsonify({"stock_data": stock_data, "chart": chart_base64})
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route('/get_stock_recommendation_and_metrics')
-def get_stock_recommendation_and_metrics():
+@app.route('/get_market_sentiment')
+def market_sentiment_page():
     ticker = request.args.get('ticker', '').upper()
-
     if not ticker:
-        return jsonify({"error": "Ticker symbol is required."}), 400
+        return render_template("get_market_sentiment.html", error="Ticker symbol is required.")
 
-    try:
-        session['risk_tolerance']=risk_tolerance  
-        result = recommend_stocks(ticker, risk_tolerance)
+    sentiment_data = get_market_sentiment(ticker)
 
-        if "error" in result:
-            return jsonify({"error": result["error"]}), 404
-    
-        # Render the template and pass the data to it
-        return render_template(
-            "Recommendations.html",
-            stock_data=result["stock_data"],
-            risk_info=result["risk_info"],
-            recommendation=result["recommendation"]
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    if "error" in sentiment_data:
+        return render_template("get_market_sentiment.html", error=sentiment_data["error"])
 
-
-@app.route("/get_market_sentiment")
-def market_sentiment():
-    ticker = request.args.get("ticker", "").upper()
-    if not ticker:
-        return jsonify({"error": "Missing ticker"}), 400
-
-    try:
-        result = fetch_market_sentiment(ticker)
-        if not result:
-            return jsonify({"error": "Failed to retrieve data"}), 500
-
-        overall_data, headline_data = result
-
-        # Render the template and pass the data to it
-        return render_template(
-            "Market_Sentiment.html",
-            ticker=ticker,
-            overall_sentiment=overall_data,
-            headlines=headline_data
-        )
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    return render_template("get_market_sentiment.html",
+                           ticker=ticker,
+                           overall_sentiment=sentiment_data['overall_sentiment'],
+                           sentiment_score=sentiment_data['sentiment_score'],
+                           headlines=sentiment_data['headlines'])
 
 # Log out -----------------------------------------------------------------
 @app.route("/logout", methods=["POST"])
