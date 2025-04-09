@@ -1,1 +1,71 @@
+from flask import Flask, render_template, url_for, request, redirect, flash, send_file, jsonify, session
+import sqlite3
+import json
+import csv
+import datetime
+import nltk
+from db import init_db, load_csv_data, insert_data_to_db, fetch_stock_data, add_stock_to_db
+from werkzeug.utils import secure_filename
+import os
+import yfinance as yf
+import matplotlib.pyplot as plt
+import io
+import base64
+from bs4 import BeautifulSoup
+from datetime import datetime, timedelta
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+import requests
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+# Define the folder for uploaded files
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'csv'}
+
+conn = init_db()
+usa_large_companies, stock_info, nasdaq_data, sp_data = load_csv_data()
+insert_data_to_db(conn, stock_info)
+
+
+# Add Stock -----------------------------------------------------------------------------
+def is_today(date_str):
+    today = datetime.today().strftime('%d-%m-%Y')
+    return date_str == today
+
+@app.route('/get_live_price', methods=['GET'])
+def get_live_price():
+    ticker = request.args.get('ticker')  # Get the ticker from the query string
+    if not ticker:
+        return jsonify({"status": "error", "message": "Ticker is required."})
+    try:
+        stock = yf.Ticker(ticker)
+        live_price = stock.info['currentPrice']
+        return jsonify({"status": "success", "price": live_price})
+    except Exception as e:
+        return jsonify({"status": "error", "message": f"Could not fetch live price for {ticker}. Please ensure the ticker is correct. Error: {str(e)}"})
+
+@app.route('/addstock', methods=['GET', 'POST'])
+def add_stock():
+    if request.method == 'POST':
+        data = request.get_json()
+        ticker = data.get('ticker')
+        shares = data.get('shares')
+        purchase_date_str = data.get('purchase_date')
+        purchase_price = data.get('purchase_price')
+
+        if not all([session.get('username'), ticker, shares, purchase_date_str, purchase_price]):
+            return jsonify({"status": "error", "message": "Missing required data."})
+
+        try:
+            purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
+        except ValueError:
+            return jsonify({"status": "error", "message": "Invalid date format. Please use YYYY-MM-DD."})
+
+        result = add_stock_to_db(conn, session['username'], ticker, int(shares), purchase_date, float(purchase_price))
+        return jsonify(result)
+    return render_template('addstock.html')
+
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
