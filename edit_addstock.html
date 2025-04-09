@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Stock</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+      :root {
+        --primary: #0044cc;
+        --primary-dark: #143bb5;
+      }
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100vh;
+            background: #F9FAFF;
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 350px;
+            background: url('https://i.pinimg.com/736x/eb/93/f9/eb93f90b67e0022291381d4f429e4905.jpg') no-repeat center center/cover;
+            z-index: -1;
+        }
+
+        .nav-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 30px;
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(26, 86, 219, 0.1);
+            border-radius: 12px;
+            max-width: 1200px;
+            margin: 20px auto;
+            width: 100%;
+        }
+
+        .nav-logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-left: 15px;
+        }
+
+        .nav-actions {
+            display: flex;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .logout-button {
+          padding: 10px 16px;
+          background-color: var(--primary);
+          color: white;
+          border: none;
+          border-radius: 8px;
+          font-size: 14px;
+          font-weight: 500;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          transition: all 0.2s ease;
+        }
+
+        .logout-button:hover {
+          background-color: var(--primary-dark);
+          transform: translateY(-1px);
+        }
+
+        .container {
+            width: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            text-align: center;
+            margin-top: 200px;
+        }
+
+        h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: black;
+        }
+
+        .form-group {
+            width: 100%;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 40px;
+            margin: 10px 0;
+            padding: 0 10px;
+            border: 1px solid #999;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-button {
+            width: 100%;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 700;
+            margin-top: 20px;
+        }
+        .form-button:hover {
+            background-color: #191970FF;
+        }
+
+      .live-price {
+        font-weight: bold;
+        color: green;
+        }
+
+        /* Back Button Styling */
+        .back-button {
+            padding: 10px 16px;
+            background-color: #f0f0f0;
+            color: #333;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: fixed;  /* Fixed button at the bottom */
+            bottom: 20px;
+            left: 20px;       /* Positioned at the left */
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background-color: #e0e0e0;
+        }
+
+        #live-price-section {
+            margin-top: 20px;
+            text-align: center;
+            display: none;
+        }
+
+        #live-price-section p {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        #live-price {
+            font-weight: bold;
+            color: green;
+        }
+
+
+        @media (max-width: 768px) {
+            .container {
+                width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-bar">
+      <div class="nav-logo">
+        <i class="fas fa-chart-line"></i> EasyFinance
+      </div>
+      <div class="nav-actions">
+        <button id="logoutButton" class="logout-button">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </div>
+
+    <div class="banner"></div>
+
+    <div class="container">
+    <h2>Add Stock</h2>
+
+    <form id="addstock-form">
+        <div class="form-group">
+            <label for="ticker-input">Enter Stock Ticker:</label>
+            <input type="text" id="ticker-input" class="form-input" placeholder="e.g., AAPL, TSLA" required>
+
+            <label for="shares">Number of Shares:</label>
+            <input type="number" id="shares" class="form-input" required>
+
+            <label for="purchase_date" id="date-label">Purchase Date (YYYY-MM-DD):</label>
+            <input type="date" id="purchase_date" class="form-input" required>
+
+            <button type="button" id="check-price" class="form-button">Check Live Price</button>
+
+            <div id="live-price-section" style="display: none;">
+                <p style="color: green;">Live price: $<span id="live-price"></span></p><br>
+                <p><strong>Purchase at this price? If yes, press "Add Stock"</strong></p>
+                <button type="button" id="manual-price-button" class="form-button">No, Enter Manually</button><br><br>
+            </div>
+                <div id="manual-price-section" style="display: none;">
+                    <label for="purchase_price">Enter Purchase Price:</label>
+                    <input type="number" step="0.01" id="purchase_price" class="form-input">
+                </div>
+            <button type="submit" class="form-button" id="add-stock-button" style="display: none;">Add Stock</button>
+        </div>
+    </form>
+</div>
+    <button class="back-button" onclick="window.history.back()">
+        <i class="fas fa-arrow-left"></i> Back
+    </button>
+
+<script>
+        const tickerInput = document.getElementById('ticker-input');
+        const checkBtn = document.getElementById('check-price');
+        const livePriceSection = document.getElementById('live-price-section');
+        const livePriceSpan = document.getElementById('live-price');
+        const manualPriceBtn = document.getElementById('manual-price-button');
+        const manualSection = document.getElementById('manual-price-section');
+        const priceInput = document.getElementById('purchase_price');
+        const addStockButton = document.getElementById('add-stock-button');
+        const form = document.getElementById('addstock-form');
+        const sharesInput = document.getElementById('shares');
+        const dateInput = document.getElementById('purchase_date');
+        const sharesLabel = document.getElementById('shares-label');
+        const dateLabel = document.getElementById('date-label');
+        let fetchedPrice = null;
+
+        // Auto-fill the current date for purchase_date input
+        window.addEventListener('DOMContentLoaded', () => {
+            const today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        });
+
+        // Check live price
+        checkBtn.addEventListener('click', async function() {
+            const ticker = document.getElementById('ticker-input').value.trim();
+            if (!ticker) {
+                alert("Please enter a stock ticker.");
+                return;
+            }
+
+            try {
+                const res = await fetch(`/get_live_price?ticker=${ticker}`);
+                const data = await res.json();
+
+                if (data.status === "success") {
+                    fetchedPrice = data.price;
+                    livePriceSpan.textContent = fetchedPrice.toFixed(2);
+                    livePriceSection.style.display = 'block';
+                    manualSection.style.display = 'none';
+                    addStockButton.style.display = 'block';
+                } else {
+                    alert(data.message);
+                    livePriceSection.style.display = 'none';
+                    fetchedPrice = null;
+                }
+            } catch (err) {
+                alert("Error fetching live price. Please try again.");
+                console.error(err);
+                livePriceSection.style.display = 'none';
+                fetchedPrice = null;
+            }
+        });
+
+        // Show manual price input section
+        manualPriceBtn.addEventListener('click', () => {
+            manualSection.style.display = 'block';
+            addStockButton.style.display = 'block';
+            priceInput.style.display = 'block';
+            priceInput.value = '';
+            priceInput.readOnly = false;
+        });
+
+        // Submit form to add stock and show success message
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const ticker = tickerInput.value.trim();
+            const shares = sharesInput.value;
+            const purchase_date = dateInput.value;
+            const purchase_price = priceInput.value;
+
+            if (!ticker || !shares || !purchase_date || !purchase_price) {
+                alert("Please fill in all required fields.");
+                return;
+            }
+
+            const payload = {
+                ticker: ticker,
+                shares: shares,
+                purchase_date: purchase_date,
+                purchase_price: purchase_price
+            };
+
+            try {
+                const res = await fetch('/addstock', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await res.json();
+
+                if (result.status === 'success') {
+                    alert(result.message);
+                    form.reset();
+                    livePriceSection.style.display = 'none';
+                    manualSection.style.display = 'none';
+                    sharesInput.style.display = 'none';
+                    dateInput.style.display = 'none';
+                    sharesLabel.style.display = 'none';
+                    dateLabel.style.display = 'none';
+                    addStockButton.style.display = 'none';
+                    priceInput.readOnly = false;
+                } else {
+                    alert("Error: " + result.message);
+                }
+            } catch (err) {
+                alert("Error submitting stock. Please try again.");
+                console.error(err);
+            }
+        });
+    </script>
+</body>
+</html>
+</script>
+</body>
+</html>
