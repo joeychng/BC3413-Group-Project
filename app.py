@@ -4,6 +4,7 @@ import json
 import csv
 import datetime
 import nltk
+nltk.download("vader_lexicon")
 from db import init_db, view_portfolio, visualise_portfolio, load_csv_data, insert_data_to_db, fetch_stock_data
 from werkzeug.utils import secure_filename
 import os
