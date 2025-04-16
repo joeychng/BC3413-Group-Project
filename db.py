@@ -131,12 +131,12 @@ def fetch_stock_data(ticker):
 # ------------------------------
 # User Guide
 # ------------------------------
-def search_company_by_name(conn, name_query):
+def search_company_by_name(conn, query):
     try:
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT rowid FROM companies_fts WHERE companies_fts MATCH ? ORDER BY rank LIMIT 5",
-            (name_query,)
+            "SELECT rowid FROM companies_fts WHERE companies_fts MATCH ? ORDER BY rank LIMIT 15",
+            (query,)
         )
         fts_res = cursor.fetchall()
         if not fts_res:
@@ -151,7 +151,6 @@ def search_company_by_name(conn, name_query):
     except Exception as e:
         print("Search error:", e)
         return []
-
 
 ##---------------------------------
 #View Portfolio (Table)
