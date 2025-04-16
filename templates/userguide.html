@@ -1,9 +1,12 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
     <title>User Guide</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/navigation_bar.css">
+
     <style>
         /* Reset and base styles */
         * {
@@ -39,6 +42,16 @@
             padding: 20px;
             min-height: 100vh;
             background-image: linear-gradient(135deg, #f0f5ff 0%, #e0eafc 100%);
+        }
+
+        h3 {
+        font-size: 1.4rem;
+        font-weight: bold;
+        margin-top: 20px;
+        margin-bottom: 10px;
+        color: #2c3e50;
+        border-bottom: 2px solid #4CAF50;
+        padding-bottom: 5px;
         }
 
         .container {
@@ -109,7 +122,8 @@
 
         .search-box {
             position: relative;
-            flex: 1;
+            flex: 2;
+            margin-top: 30px;
         }
 
         .search-input {
@@ -248,51 +262,7 @@
             font-weight: 500;
             text-transform: uppercase;
         }
-                /* Back Button Styling */
-        .back-button {
-            padding: 10px 16px;
-            background-color: #f0f0f0;
-            color: #333;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: fixed;  /* Fixed button at the bottom */
-            bottom: 20px;
-            left: 20px;       /* Positioned at the left */
-            transition: all 0.2s ease;
-        }
 
-        .back-button:hover {
-            background-color: #e0e0e0;
-        }
-
-        /* Navigation bar */
-        .nav-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(26, 86, 219, 0.1);
-            margin-bottom: 20px;
-            border-radius: 12px;
-            max-width: 1200px;
-            margin: 0 auto 20px auto;
-        }
-
-        .nav-logo {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
         .form-button {
             background: #026CDF;
             color: white;
@@ -307,21 +277,6 @@
 
         .form-button:hover {
             background: #0056b3;
-        }
-
-        .logout-button {
-            padding: 10px 16px;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.2s ease;
         }
 
         .table-container {
@@ -391,9 +346,15 @@
             <i class="fas fa-chart-line"></i> EasyFinance
         </div>
         <div class="nav-actions">
-            <button id="logoutButton" class="logout-button">
+            <a href="/dashboard" class="nav-button" id="backButton">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="/dashboard" class="nav-button">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </a>
+            <a href="/logout" class="logout-button">
                 <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+            </a>
         </div>
     </div>
     <div class="container">
@@ -413,69 +374,57 @@
         </div>
 
     <div class="controls">
+        <form method="POST" action="/userguide">
         <div class="search-container">
             <!-- Search Box with Icon -->
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" class="search-input" id="searchInput" name="company_name" placeholder="Search company..." value="{{ query }}">
             </div>
+            <!-- Search Button Form -->
+            <div>
+                <br>
+                <button type="submit" class="form-button">Search</button>
+            </div>
         </div>
+        </form>
     </div>
 
     <!-- Search Results Section -->
+<!-- Search Results Section -->
 <div class="table-container">
+    {% if query %}
+        <h3 style="padding-left: 20px;">Results for "{{ query }}"</h3>
+        {% if results %}
+            <p style = "padding-left: 20px;"><em>{{ results|length }} result{{ 's' if results|length > 1 else '' }} found.</em></p>
+        {% endif %}
+    {% endif %}
+
     <table>
         <thead>
             <tr>
                 <th class="sortable" data-column="ticker">Ticker</th>
                 <th class="company-col">Company</th>
-                <th class="company-col">Industry</th>
             </tr>
         </thead>
         <tbody id="transactionTableBody">
-            <!-- Rows will be added here by JavaScript -->
+            {% if results %}
+                {% for ticker, name in results %}
+                    <tr>
+                        <td>{{ ticker }}</td>
+                        <td>{{ name }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="2">No results found.</td>
+                </tr>
+            {% endif %}
         </tbody>
     </table>
-    </div>
-        <!-- Back Button -->
-    <button class="back-button" onclick="window.history.back()">
-        <i class="fas fa-arrow-left"></i> Back
-    </button>
+</div>
+
 <script>
-
-    // Dummy data
-        const dummy_data = [
-            {"ticker": "ADVS", "name": "Advent Software.", "industry": "Technology"},
-            {"ticker": "BVSN", "name": "Broadvision", "industry": "Technology"},
-            {"ticker": "HAV", "name": "Helios Advantage", "industry": "Technology"},
-            {"ticker": "NAD", "name": "Nuveen Divadv Fund", "industry": "Finance"}
-        ];
-
-        // Function to populate the table with dummy data
-        const tableBody = document.getElementById('transactionTableBody');
-
-        // Loop through dummy data and create table rows
-        dummy_data.forEach(entry => {
-            const row = document.createElement('tr');
-
-            const tickerCell = document.createElement('td');
-            tickerCell.textContent = entry.ticker;
-            row.appendChild(tickerCell);
-
-            const nameCell = document.createElement('td');
-            nameCell.textContent = entry.name;
-            row.appendChild(nameCell);
-
-            const industryCell = document.createElement('td');
-            industryCell.textContent = entry.industry;
-            row.appendChild(industryCell);
-
-            tableBody.appendChild(row);
-        });
-
-            // Optionally auto-fill the form fields (for demo purposes)
-            document.getElementById('searchInput').value = "ADV";
-
         // Logout button functionality
         document.getElementById('logoutButton').addEventListener('click', function() {
             if (confirm('Are you sure you want to logout?')) {
@@ -486,4 +435,6 @@
         });
 
 </script>
-</body></html>
+
+</body>
+</html>
