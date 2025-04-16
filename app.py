@@ -339,6 +339,21 @@ def import_portfolio(username):
 
     return redirect(url_for("dashboard", username=username))
 
+# User Guide -----------------------------------------------------------------
+@app.route('/dashboard/<username>/user_guide', methods=['GET', 'POST'])
+def userguide():
+    search_results = []
+    query = ""
+
+    if request.method == 'POST':
+        query = request.form.get('company_name', '').strip()
+        if query:
+            conn = init_db()
+            search_results = search_company_by_name(conn, query)
+            conn.close()
+
+    return render_template('userguide.html', results=search_results, query=query)
+
 # Risk Tolerance -----------------------------------------------------------------
 @app.route('/dashboard/<username>/risk_tolerance', methods=['GET', 'POST'])
 def risk_tolerance(username):
@@ -354,26 +369,6 @@ def risk_tolerance(username):
         new_risk_tolerance = user.fetch_risk_tolerance(username)
     return render_template('risk_tolerance.html', risk_tolerance=new_risk_tolerance, username=username)
     
-
-
-
-#User Guide page
-@app.route('/userguide', methods=['GET', 'POST'])
-def userguide():
-    dummy_data = [
-        {"ticker": "ADVS", "name": "Advent Software.", "industry": "Technology"},
-        {"ticker": "BVSN", "name": "Broadvision", "industry": "Technology"},
-        {"ticker": "HAV", "name": "Helios Advantage", "industry": "Technology"},
-        {"ticker": "NAD", "name": "Nuveen Divadv Fund", "industry": "Finance"}
-    ]
-    query = request.form.get('company_name', '')  # Get search query from form
-    results = []
-
-    if query:
-        # Filter data based on the query
-        results = [entry for entry in dummy_data if query.lower() in entry['name'].lower()]
-
-    return render_template('userguide.html', query=query, results=results)
 
 # Function to add stock 
 def add_stock_to_db(ticker, shares, purchase_date, purchase_price):
