@@ -280,9 +280,10 @@
             <div class="dropdown">
                 <button>Menu</button>
                 <div class="dropdown-content">
-                    <a href="#">User Guide</a>
+                    <a href="{{url_for('userguide')}}">User Guide</a>
                     <a href="#import-portfolio-section">Import Portfolio</a>
-                    <a href="#">Add/Remove Stock</a>
+                    <a href="#">Add Stock</a>
+                    <a href="#">Remove Stock</a>
                     <a href="#">View Past Transactions</a>
                     <a href="{{ url_for('info_menu') }}">Fetch Stock Information</a>
                     <a href="{{ url_for('recommendation_menu') }}">View Stock Recommendation</a>
