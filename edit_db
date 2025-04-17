@@ -123,63 +123,6 @@ def fetch_stock_data(ticker):
         'Returns': returns
     }
 
-# ------------------------------
-# User Guide
-# ------------------------------
-def search_company_by_name(conn, name_query):
-    try:
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT rowid FROM companies_fts WHERE companies_fts MATCH ? ORDER BY rank LIMIT 5",
-            (name_query,)
-        )
-        fts_res = cursor.fetchall()
-        if not fts_res:
-            return []
-
-        param_ls = ','.join(['?'] * len(fts_res))
-        cursor.execute(
-            f"SELECT ticker, name FROM companies WHERE rowid IN ({param_ls})",
-            [x[0] for x in fts_res]
-        )
-        return cursor.fetchall()
-    except Exception as e:
-        print("Search error:", e)
-        return []
-
-# ------------------------------
-# Add Stock
-# ------------------------------
-def is_today(date_str):
-    today = datetime.today().strftime('%d-%m-%Y')
-    return date_str == today
-
-def add_stock_to_db(conn, username, ticker, shares, purchase_price, purchase_date, live_price):
-        # Determine if the date is today
-        if purchase_date.lower() == is_today():
-            purchase_date = datetime.today().strftime('%d-%m-%Y')
-            stock_data = fetch_stock_data(ticker)
-            live_price = stock_data.get('Bid', stock_data.get('Previous Close', 0))
-        else:
-            datetime.strptime(purchase_date, "%d-%m-%Y")
-            live_price = fetch_historical_price(ticker, purchase_date)
-
-        final_price = float(purchase_price) if purchase_price else live_price
-        unrealized_pnl = (live_price - final_price) * int(shares) if live_price else None
-
-        share_check = shares
-
-        cursor = conn.cursor()
-        cursor.execute('''
-            INSERT INTO portfolios (
-                username, ticker, shares, share_check, live_price, purchase_price, purchase_date, unrealized_profit_loss
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            username, ticker, shares, share_check, live_price,purchase_price, purchase_date, unrealized_pnl
-        ))
-        conn.commit()
-
 def fetch_historical_price(ticker, date_str):
     """
     Fetch the historical closing price for a stock on a given date.
@@ -208,5 +151,51 @@ def fetch_historical_price(ticker, date_str):
 
         # Return the closing price of the last available trading day
         return hist['Close'].iloc[0]
+
     except Exception as e:
         return None
+
+# ------------------------------
+# User Guide
+# ------------------------------
+def search_company_by_name(conn, name_query):
+    try:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT rowid FROM companies_fts WHERE companies_fts MATCH ? ORDER BY rank LIMIT 5",
+            (name_query,)
+        )
+        fts_res = cursor.fetchall()
+        if not fts_res:
+            return []
+
+        param_ls = ','.join(['?'] * len(fts_res))
+        cursor.execute(
+            f"SELECT ticker, name FROM companies WHERE rowid IN ({param_ls})",
+            [x[0] for x in fts_res]
+        )
+        return cursor.fetchall()
+    except Exception as e:
+        print("Search error:", e)
+        return []
+
+##---------------------------------
+#Add Stock
+##---------------------------------
+def add_stock_to_db(conn, username, ticker, shares, purchase_price, purchase_date, live_price):
+    final_price = float(purchase_price) if purchase_price else live_price
+    unrealized_pnl = (live_price - final_price) * int(shares) if live_price else None
+
+    share_check = shares
+
+    cursor = conn.cursor()
+    cursor.execute('''
+        INSERT INTO portfolios (
+            username, ticker, shares, share_check, live_price, purchase_price, purchase_date, unrealized_profit_loss
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    ''', (
+        username, ticker, shares, share_check, live_price, purchase_price, purchase_date, unrealized_pnl
+    ))
+    conn.commit()
+
