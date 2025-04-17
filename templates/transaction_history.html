@@ -1,43 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - EasyFinance</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles_transactions.css">
+</head>
+<body>
+    <div class="nav-bar">
+        <div class="nav-logo">
+            <i class="fas fa-chart-line"></i> EasyFinance
+        </div>
+        <div class="nav-actions">
+            <a href="/dashboard" class="nav-button" id="backButton">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="/dashboard" class="nav-button">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </a>
+            <a href="/logout" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+    </div>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Transaction History</h1>
+            <p class="description">View your past stock transactions and performance</p>
+        </div>
+        <div class="controls">
+            <div class="search-container">
+                <div class="search-box">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" class="search-input" id="searchInput" placeholder="Search by ticker or company...">
+                </div>
+                <button class="filter-button">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="sortable sorted-asc" data-column="date">Date</th>
+                        <th class="sortable" data-column="ticker">Ticker</th>
+                        <th class="company-col">Company</th>
+                        <th data-align="right">Type</th>
+                        <th data-align="right">Shares</th>
+                        <th data-align="right">Buy Price</th>
+                        <th class="sell-date-col sortable" data-column="sellDate">Sell Date</th>
+                        <th data-align="right">Sell Price</th>
+                        <th data-align="right">Realised P/L</th>
+                        <th data-align="right">Unrealised P/L</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionTableBody">
+                    <!-- Table rows will be populated by Jinja2 templating -->
+                    {% if transactions %}
+                        {% for transaction in transactions %}
+                        <tr>
+                            <td data-date="{{ transaction.purchase_date }}">{{ transaction.purchase_date|format_date }}</td>
+                            <td><div class="ticker-cell"> {{ transaction.ticker }}</div></td>
+                            <td class="company-col">{{ transaction.company }}</td>
+                            <td data-align="right" class="{% if transaction.type == 'Buy' %}profit{% elif transaction.type == 'Sell' %}loss{% endif %}">{{ transaction.type }}</td>
+                            <td data-align="right">{{ transaction.shares or '-' }}</td>
+                            <td data-align="right">{{ transaction.buy_price|format_currency }}</td>
+                            <td class="sell-date-col" data-date="{{ transaction.sell_date }}">{{ transaction.sell_date|format_date }}</td>
+                            <td data-align="right">{{ transaction.sell_price|format_currency }}</td>
+                            <td data-align="right" class="{% if transaction.realised_pl|float > 0 %}profit{% elif transaction.realised_pl|float < 0 %}loss{% endif %}">
+                                {{ transaction.realised_pl|format_currency }}
+                            </td>
+                            <td data-align="right" class="{% if transaction.unrealised_pl|float > 0 %}profit{% elif transaction.unrealised_pl|float < 0 %}loss{% endif %}">
+                                {{ transaction.unrealised_pl|format_currency }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="10" class="empty-message">
+                                <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px; color: var(--gray-400);"></i>
+                                <div>No transactions found</div>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Set up back button
+            document.getElementById("backButton").addEventListener("click", (e) => {
+                e.preventDefault();
+                window.history.back();
+            });
 
-        # Attempt to fetch data for the exact date
-        stock = yf.Ticker(ticker)
-        hist = stock.history(period="1d", start=date_str, end=(date + timedelta(days=1)).strftime('%Y-%m-%d'))
+            // Set up search functionality
+            const searchInput = document.getElementById("searchInput");
+            searchInput.addEventListener("input", function() {
+                filterTransactions(this.value);
+            });
 
-        # If no data available, check previous trading days
-        while hist.empty:
-            date -= timedelta(days=1)  # Move to previous day
-            if date.weekday() in [5, 6]:  # Skip weekends (Saturday=5, Sunday=6)
-                date -= timedelta(days=2)
+            // Set up sorting with default sort
+            setupSorting();
+            // Sort by date ascending by default
+            sortRows("date", "asc");
+        });
 
-            # Try fetching again
-            hist = stock.history(period="1d", start=date.strftime('%Y-%m-%d'),
-                                 end=(date + timedelta(days=1)).strftime('%Y-%m-%d'))
+        // Filter transactions based on search term
+        function filterTransactions(searchTerm) {
+            const rows = document.querySelectorAll("#transactionTableBody tr");
+            const term = searchTerm.toLowerCase();
+            let visibleCount = 0;
 
-            # Stop if checking too far back (e.g., 30 days ago)
-            if (datetime.today() - date).days > 30:
-                print("No valid historical data found in the last 30 days.")
-                return None
+            rows.forEach((row) => {
+                const ticker = row.querySelector(".ticker-cell")?.textContent.trim().toLowerCase() || "";
+                const company = row.querySelector(".company-col")?.textContent.trim().toLowerCase() || "";
 
-        # Return the closing price of the last available trading day
-        return hist['Close'].iloc[0]
+                if (ticker.includes(term) || company.includes(term)) {
+                    row.style.display = "";
+                    visibleCount++;
+                } else {
+                    row.style.display = "none";
+                }
+            });
 
-    except Exception as e:
-        print(f"Error fetching historical price for {ticker}: {e}")
-        return None
+            // Show "no results" message if no matches
+            if (visibleCount === 0 && searchTerm) {
+                const tableBody = document.getElementById("transactionTableBody");
+                const noResultsRow = document.createElement("tr");
+                noResultsRow.id = "noResultsRow";
+                noResultsRow.innerHTML = `
+                    <td colspan="10" class="empty-message">
+                        <i class="fas fa-search" style="font-size: 24px; margin-bottom: 10px; color: var(--gray-400);"></i>
+                        <div>No transactions found matching "${searchTerm}"</div>
+                    </td>
+                `;
 
+                // Remove existing no results row if it exists
+                const existingNoResults = document.getElementById("noResultsRow");
+                if (existingNoResults) {
+                    existingNoResults.remove();
+                }
 
-def get_company_name(ticker):def fetch_historical_price(ticker, date_str):
-    """
-    Fetch the historical closing price for a stock on a given date.
-    If no data is available for that date (weekend/holiday), fetch the last available trading day.
-    """
-    try:
-        # Convert date string to datetime object
-        date = datetime.strptime(date_str, "%Y-%m-%d")
+                tableBody.appendChild(noResultsRow);
+            } else {
+                // Remove no results row if there are matches
+                const existingNoResults = document.getElementById("noResultsRow");
+                if (existingNoResults) {
+                    existingNoResults.remove();
+                }
+            }
+        }
 
-    try:
-        stock = yf.Ticker(ticker)
-        return stock.info.get("longName", ticker)  # Fallback to ticker if name is unavailable
-    except Exception as e:
-        print(f"Error fetching company name for {ticker}: {e}")
-        return ticker  # Return ticker as a fallback
+        // Set up sorting functionality
+        function setupSorting() {
+            // Initialize with date column as default sort
+            let currentSortColumn = "date";
+            let currentSortDirection = "asc";
+
+            document.querySelectorAll("th.sortable").forEach((header) => {
+                header.addEventListener("click", function() {
+                    const column = this.getAttribute("data-column");
+
+                    // Reset all headers
+                    document.querySelectorAll("th").forEach((th) => {
+                        th.classList.remove("sorted-asc", "sorted-desc");
+                    });
+
+                    // Set sort direction
+                    if (currentSortColumn === column) {
+                        currentSortDirection = currentSortDirection === "asc" ? "desc" : "asc";
+                    } else {
+                        currentSortColumn = column;
+                        currentSortDirection = "asc";
+                    }
+
+                    // Add class to current header
+                    this.classList.add(currentSortDirection === "asc" ? "sorted-asc" : "sorted-desc");
+
+                    // Sort rows
+                    sortRows(column, currentSortDirection);
+                });
+            });
+        }
+
+        // Sort table rows
+        function sortRows(column, direction) {
+            const tableBody = document.getElementById("transactionTableBody");
+            const rows = Array.from(tableBody.querySelectorAll("tr:not(#noResultsRow)"));
+
+            // Define column indices
+            const columnIndices = {
+                date: 0,
+                ticker: 1,
+                company: 2,
+                type: 3,
+                shares: 4,
+                buyPrice: 5,
+                sellDate: 6,
+                sellPrice: 7,
+                realisedPL: 8,
+                unrealisedPL: 9,
+            };
+
+            const sortedRows = rows.sort((a, b) => {
+                const index = columnIndices[column];
+
+                // Special handling for date columns - use data-date attribute
+                if (["date", "sellDate"].includes(column)) {
+                    const aCell = a.cells[index];
+                    const bCell = b.cells[index];
+
+                    // Get the original date values from data attributes
+                    let aValue = aCell.getAttribute("data-date") || "";
+                    let bValue = bCell.getAttribute("data-date") || "";
+
+                    // Handle empty dates
+                    if (aValue === "") aValue = "9999-12-31";
+                    if (bValue === "") bValue = "9999-12-31";
+
+                    // Debug
+                    console.log(`Comparing dates: ${aValue} vs ${bValue}, direction: ${direction}`);
+
+                    // Compare dates (YYYY-MM-DD format sorts correctly as strings)
+                    if (direction === "asc") {
+                        return aValue.localeCompare(bValue);
+                    } else {
+                        return bValue.localeCompare(aValue);
+                    }
+                } else {
+                    // For non-date columns, use the existing logic
+                    let aValue = a.cells[index].textContent.trim();
+                    let bValue = b.cells[index].textContent.trim();
+
+                    // Handle numeric values
+                    if (["shares", "buyPrice", "sellPrice", "realisedPL", "unrealisedPL"].includes(column)) {
+                        aValue = Number.parseFloat(aValue.replace(/[^0-9.-]+/g, "")) || 0;
+                        bValue = Number.parseFloat(bValue.replace(/[^0-9.-]+/g, "")) || 0;
+
+                        // Compare numeric values
+                        if (direction === "asc") {
+                            return aValue - bValue;
+                        } else {
+                            return bValue - aValue;
+                        }
+                    }
+
+                    // Compare string values
+                    if (direction === "asc") {
+                        return aValue.localeCompare(bValue);
+                    } else {
+                        return bValue.localeCompare(aValue);
+                    }
+                }
+            });
+
+            // Reorder rows in the DOM
+            sortedRows.forEach((row) => tableBody.appendChild(row));
+        }
+
+        // Add function to fetch and display stock chart
+        async function displayStockChart(ticker) {
+            try {
+                const response = await fetch(`/api/chart/${ticker}`);
+                if (!response.ok) {
+                    throw new Error("Failed to fetch chart");
+                }
+
+                const data = await response.json();
+
+                // Create modal to display chart
+                const modal = document.createElement("div");
+                modal.className = "chart-modal";
+                modal.innerHTML = `
+                    <div class="chart-modal-content">
+                        <span class="chart-modal-close">&times;</span>
+                        <h2>${ticker} Stock Price (Last 6 Months)</h2>
+                        <img src="data:image/png;base64,${data.chart}" alt="${ticker} price chart" class="stock-chart">
+                    </div>
+                `;
+
+                document.body.appendChild(modal);
+
+                // Add event listener to close button
+                const closeBtn = modal.querySelector(".chart-modal-close");
+                closeBtn.addEventListener("click", () => {
+                    document.body.removeChild(modal);
+                });
+
+                // Close modal when clicking outside
+                window.addEventListener("click", (event) => {
+                    if (event.target === modal) {
+                        document.body.removeChild(modal);
+                    }
+                });
+            } catch (error) {
+                console.error("Error displaying chart:", error);
+                alert("Failed to load stock chart. Please try again later.");
+            }
+        }
+    </script>
+</body>
+</html>
