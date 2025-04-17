@@ -27,43 +27,65 @@ usa_large_companies, stock_info, nasdaq_data, sp_data = load_csv_data()
 insert_data_to_db(conn, stock_info)
 
 
+
 # Add Stock -----------------------------------------------------------------------------
-def is_today(date_str):
-    today = datetime.today().strftime('%d-%m-%Y')
-    return date_str == today
 
 @app.route('/get_live_price', methods=['GET'])
 def get_live_price():
-    ticker = request.args.get('ticker')  # Get the ticker from the query string
-    if not ticker:
-        return jsonify({"status": "error", "message": "Ticker is required."})
+    ticker = request.args.get('ticker')
+    purchase_date_str = request.args.get('purchase_date')
+    if not ticker or not purchase_date_str:
+        return jsonify({"status": "error", "message": "Ticker and purchase date are required."})
     try:
-        stock = yf.Ticker(ticker)
-        live_price = stock.info['currentPrice']
+        purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
+        today_str = datetime.today().strftime('%d-%m-%Y')
+        if purchase_date == today_str:
+            stock_data = fetch_stock_data(ticker)
+            live_price = stock_data.get('Bid', stock_data.get('Previous Close', 0))
+        else:
+            live_price = fetch_historical_price(ticker, purchase_date)
+
         return jsonify({"status": "success", "price": live_price})
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Could not fetch live price for {ticker}. Please ensure the ticker is correct. Error: {str(e)}"})
+        return jsonify({"status": "error", "message": f"Could not fetch price for {ticker} on {purchase_date_str}. Error: {str(e)}"})
+
+
 
 @app.route('/addstock', methods=['GET', 'POST'])
 def add_stock():
     if request.method == 'POST':
+        session['username'] = "abc"
+        username = session.get('username')
         data = request.get_json()
         ticker = data.get('ticker')
         shares = data.get('shares')
         purchase_date_str = data.get('purchase_date')
-        purchase_price = data.get('purchase_price')
+        purchase_price = data.get('purchase_price')  # could be null
 
-        if not all([session.get('username'), ticker, shares, purchase_date_str, purchase_price]):
+        if not all([session.get('username'), ticker, shares, purchase_date_str]):
             return jsonify({"status": "error", "message": "Missing required data."})
 
         try:
             purchase_date = datetime.strptime(purchase_date_str, '%Y-%m-%d').strftime('%d-%m-%Y')
         except ValueError:
-            return jsonify({"status": "error", "message": "Invalid date format. Please use YYYY-MM-DD."})
+            return jsonify({"status": "error", "message": "Invalid date format. Use YYYY-MM-DD."})
 
-        result = add_stock_to_db(conn, session['username'], ticker, int(shares), purchase_date, float(purchase_price))
+        if purchase_price is None:
+            today_str = datetime.today().strftime('%d-%m-%Y')
+            if purchase_date == today_str:
+                stock_data = fetch_stock_data(ticker)
+                live_price = stock_data.get('Bid', stock_data.get('Previous Close', 0))
+            else:
+                live_price = fetch_historical_price(ticker, purchase_date)
+            purchase_price = live_price
+        else:
+            live_price = fetch_stock_data(ticker).get('Bid', 0)
+
+        result = add_stock_to_db(conn, session['username'], ticker, int(shares), float(purchase_price), purchase_date, live_price)
         return jsonify(result)
+
     return render_template('addstock.html')
+
 
 
 if __name__ == '__main__':
