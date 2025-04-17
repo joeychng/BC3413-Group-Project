@@ -182,7 +182,14 @@ def search_company_by_name(conn, name_query):
 ##---------------------------------
 #Add Stock
 ##---------------------------------
-def add_stock_to_db(conn, username, ticker, shares, purchase_price, purchase_date, live_price):
+def add_stock_to_db(conn, username, ticker, shares, purchase_price, purchase_date, live_price, today_str=None):
+    today_str = datetime.today().strftime('%d-%m-%Y')
+    if purchase_date == today_str:
+        stock_data = fetch_stock_data(ticker)
+        live_price = stock_data.get('Bid', stock_data.get('Previous Close', 0))
+    else:
+        live_price = fetch_historical_price(ticker, purchase_date)
+
     final_price = float(purchase_price) if purchase_price else live_price
     unrealized_pnl = (live_price - final_price) * int(shares) if live_price else None
 
