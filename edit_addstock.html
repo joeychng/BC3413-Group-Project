@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Stock</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/navigation_bar.css">
     <style>
       :root {
         --primary: #0044cc;
@@ -61,26 +62,6 @@
             flex-grow: 1;
         }
 
-        .logout-button {
-          padding: 10px 16px;
-          background-color: var(--primary);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.2s ease;
-        }
-
-        .logout-button:hover {
-          background-color: var(--primary-dark);
-          transform: translateY(-1px);
-        }
-
         .container {
             width: 800px;
             background: white;
@@ -134,29 +115,6 @@
         color: green;
         }
 
-        /* Back Button Styling */
-        .back-button {
-            padding: 10px 16px;
-            background-color: #f0f0f0;
-            color: #333;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: fixed;  /* Fixed button at the bottom */
-            bottom: 20px;
-            left: 20px;       /* Positioned at the left */
-            transition: all 0.2s ease;
-        }
-
-        .back-button:hover {
-            background-color: #e0e0e0;
-        }
-
         #live-price-section {
             margin-top: 20px;
             text-align: center;
@@ -183,14 +141,20 @@
 </head>
 <body>
     <div class="nav-bar">
-      <div class="nav-logo">
-        <i class="fas fa-chart-line"></i> EasyFinance
-      </div>
-      <div class="nav-actions">
-        <button id="logoutButton" class="logout-button">
-          <i class="fas fa-sign-out-alt"></i> Logout
-        </button>
-      </div>
+        <div class="nav-logo">
+            <i class="fas fa-chart-line"></i> EasyFinance
+        </div>
+        <div class="nav-actions">
+            <a href="/dashboard/<username>" class="nav-button" id="backButton">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="/dashboard/<username>" class="nav-button">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </a>
+            <a href="/logout" class="logout-button">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
     </div>
 
     <div class="banner"></div>
@@ -224,124 +188,139 @@
         </div>
     </form>
 </div>
-    <button class="back-button" onclick="window.history.back()">
-        <i class="fas fa-arrow-left"></i> Back
-    </button>
+
 
 <script>
-        const tickerInput = document.getElementById('ticker-input');
-        const checkBtn = document.getElementById('check-price');
-        const livePriceSection = document.getElementById('live-price-section');
-        const livePriceSpan = document.getElementById('live-price');
-        const manualPriceBtn = document.getElementById('manual-price-button');
-        const manualSection = document.getElementById('manual-price-section');
-        const priceInput = document.getElementById('purchase_price');
-        const addStockButton = document.getElementById('add-stock-button');
-        const form = document.getElementById('addstock-form');
-        const sharesInput = document.getElementById('shares');
-        const dateInput = document.getElementById('purchase_date');
-        const sharesLabel = document.getElementById('shares-label');
-        const dateLabel = document.getElementById('date-label');
-        let fetchedPrice = null;
+    const tickerInput = document.getElementById('ticker-input');
+    const checkBtn = document.getElementById('check-price');
+    const livePriceSection = document.getElementById('live-price-section');
+    const livePriceSpan = document.getElementById('live-price');
+    const manualPriceBtn = document.getElementById('manual-price-button');
+    const manualSection = document.getElementById('manual-price-section');
+    const priceInput = document.getElementById('purchase_price');
+    const addStockButton = document.getElementById('add-stock-button');
+    const form = document.getElementById('addstock-form');
+    const sharesInput = document.getElementById('shares');
+    const dateInput = document.getElementById('purchase_date');
 
-        // Auto-fill the current date for purchase_date input
-        window.addEventListener('DOMContentLoaded', () => {
-            const today = new Date().toISOString().split('T')[0];
-            dateInput.value = today;
-        });
+    let fetchedPrice = null;
+    let useManualPrice = false;
 
-        // Check live price
-        checkBtn.addEventListener('click', async function() {
-            const ticker = document.getElementById('ticker-input').value.trim();
-            if (!ticker) {
-                alert("Please enter a stock ticker.");
-                return;
-            }
+    // Auto-fill today's date on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    });
 
-            try {
-                const res = await fetch(`/get_live_price?ticker=${ticker}`);
-                const data = await res.json();
+    // Fetch live price using both ticker and purchase date
+    checkBtn.addEventListener('click', async function () {
+        const ticker = tickerInput.value.trim();
+        const purchaseDate = dateInput.value;
 
-                if (data.status === "success") {
-                    fetchedPrice = data.price;
-                    livePriceSpan.textContent = fetchedPrice.toFixed(2);
-                    livePriceSection.style.display = 'block';
-                    manualSection.style.display = 'none';
-                    addStockButton.style.display = 'block';
-                } else {
-                    alert(data.message);
-                    livePriceSection.style.display = 'none';
-                    fetchedPrice = null;
-                }
-            } catch (err) {
-                alert("Error fetching live price. Please try again.");
-                console.error(err);
+        if (!ticker || !purchaseDate) {
+            alert("Please enter both stock ticker and purchase date.");
+            return;
+        }
+
+        try {
+            const res = await fetch(`/get_live_price?ticker=${ticker}&purchase_date=${purchaseDate}`);
+            const data = await res.json();
+
+            if (data.status === "success") {
+                fetchedPrice = data.price;
+                useManualPrice = false;
+                livePriceSpan.textContent = fetchedPrice.toFixed(2);
+                livePriceSection.style.display = 'block';
+                manualSection.style.display = 'none';
+                addStockButton.style.display = 'block';
+            } else {
+                alert(data.message);
                 livePriceSection.style.display = 'none';
                 fetchedPrice = null;
             }
+        } catch (err) {
+            alert("Error fetching live price. Please try again.");
+            console.error(err);
+            livePriceSection.style.display = 'none';
+            fetchedPrice = null;
+        }
+    });
+
+    // Allow user to input manual price
+    manualPriceBtn.addEventListener('click', () => {
+        manualSection.style.display = 'block';
+        addStockButton.style.display = 'block';
+        priceInput.style.display = 'block';
+        priceInput.value = '';
+        priceInput.readOnly = false;
+        useManualPrice = true;
+    });
+
+    // Submit form
+    form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const ticker = tickerInput.value.trim();
+    const shares = sharesInput.value;
+    const purchase_date = dateInput.value;
+
+    let purchase_price = null;
+
+    if (useManualPrice) {
+        purchase_price = priceInput.value.trim();
+        if (!purchase_price || isNaN(purchase_price)) {
+            alert("Please enter a valid manual purchase price.");
+            return;
+        }
+    } else {
+        if (fetchedPrice === null) {
+            alert("Please check the live price or enter a manual price.");
+            return;
+        }
+        purchase_price = fetchedPrice;
+    }
+
+    if (!ticker || !shares || !purchase_date || !purchase_price) {
+        alert("Please fill in all required fields.");
+        return;
+    }
+
+    const payload = {
+        ticker: ticker,
+        shares: shares,
+        purchase_date: purchase_date,
+        purchase_price: parseFloat(purchase_price)
+    };
+
+    try {
+        const res = await fetch('/addstock', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
         });
 
-        // Show manual price input section
-        manualPriceBtn.addEventListener('click', () => {
-            manualSection.style.display = 'block';
-            addStockButton.style.display = 'block';
-            priceInput.style.display = 'block';
-            priceInput.value = '';
-            priceInput.readOnly = false;
-        });
+        const result = await res.json();
 
-        // Submit form to add stock and show success message
-        form.addEventListener('submit', async function (e) {
-            e.preventDefault();
+        if (result.status === 'success') {
+            alert(result.message);
+            form.reset();
+            livePriceSection.style.display = 'none';
+            manualSection.style.display = 'none';
+            addStockButton.style.display = 'none';
+            fetchedPrice = null;
+            useManualPrice = false;
+        } else {
+            alert("Error: " + result.message);
+        }
+    } catch (err) {
+        alert("Error submitting stock. Please try again.");
+        console.error(err);
+    }
+});
+</script>
 
-            const ticker = tickerInput.value.trim();
-            const shares = sharesInput.value;
-            const purchase_date = dateInput.value;
-            const purchase_price = priceInput.value;
-
-            if (!ticker || !shares || !purchase_date || !purchase_price) {
-                alert("Please fill in all required fields.");
-                return;
-            }
-
-            const payload = {
-                ticker: ticker,
-                shares: shares,
-                purchase_date: purchase_date,
-                purchase_price: purchase_price
-            };
-
-            try {
-                const res = await fetch('/addstock', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await res.json();
-
-                if (result.status === 'success') {
-                    alert(result.message);
-                    form.reset();
-                    livePriceSection.style.display = 'none';
-                    manualSection.style.display = 'none';
-                    sharesInput.style.display = 'none';
-                    dateInput.style.display = 'none';
-                    sharesLabel.style.display = 'none';
-                    dateLabel.style.display = 'none';
-                    addStockButton.style.display = 'none';
-                    priceInput.readOnly = false;
-                } else {
-                    alert("Error: " + result.message);
-                }
-            } catch (err) {
-                alert("Error submitting stock. Please try again.");
-                console.error(err);
-            }
-        });
-    </script>
 </body>
 </html>
 </script>
