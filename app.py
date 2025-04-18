@@ -340,19 +340,21 @@ def import_portfolio(username):
     return redirect(url_for("dashboard", username=username))
 
 # User Guide -----------------------------------------------------------------
-@app.route('/dashboard/<username>/user_guide', methods=['GET', 'POST'])
-def userguide():
+@app.route("/dashboard/<username>/userguide", methods=["GET", "POST"])
+def userguide(username):
     search_results = []
     query = ""
+    user = User()
+    username = session.get('login_username')
 
     if request.method == 'POST':
         query = request.form.get('company_name', '').strip()
         if query:
-            conn = init_db()
+            conn = sqlite3.connect(DB_NAME)
             search_results = search_company_by_name(conn, query)
             conn.close()
 
-    return render_template('userguide.html', results=search_results, query=query)
+    return render_template("userguide.html", results=search_results, query=query, username=username)
 
 # Risk Tolerance -----------------------------------------------------------------
 @app.route('/dashboard/<username>/risk_tolerance', methods=['GET', 'POST'])
