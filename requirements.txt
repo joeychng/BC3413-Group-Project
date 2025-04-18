@@ -2,3 +2,4 @@ flask
 yfinance
 prettytable
 nltk
+scipy
