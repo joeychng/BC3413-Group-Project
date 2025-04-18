@@ -254,15 +254,6 @@
             font-size: 16px;
         }
 
-        .badge {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-            text-transform: uppercase;
-        }
-
         .form-button {
             background: #026CDF;
             color: white;
@@ -277,11 +268,6 @@
 
         .form-button:hover {
             background: #0056b3;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            padding: 0;
         }
 
         table {
@@ -310,17 +296,7 @@
             font-weight: bold;
         }
 
-        .logout-button:hover {
-            background-color: var(--primary-dark);
-            transform: translateY(-1px);
-        }
-
-        /* Responsive styles */
         @media (max-width: 768px) {
-            .company-col, .sell-date-col {
-                display: none;
-            }
-
             .header {
                 padding: 20px;
             }
@@ -346,15 +322,17 @@
             <i class="fas fa-chart-line"></i> EasyFinance
         </div>
         <div class="nav-actions">
-            <a href="/dashboard" class="nav-button" id="backButton">
+            <a href="javascript:history.back()" class="nav-button">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
-            <a href="/dashboard" class="nav-button">
+            <a href="javascript:history.back()" class="nav-button">
                 <i class="fas fa-chart-pie"></i> Dashboard
             </a>
-            <a href="/logout" class="logout-button">
-                <i class="fas fa-sign-out-alt"></i> Logout
-            </a>
+             <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+                <button type="submit" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i>Logout
+                </button>
+            </form>
         </div>
     </div>
     <div class="container">
@@ -376,12 +354,10 @@
     <div class="controls">
         <form method="POST" action="/userguide">
         <div class="search-container">
-            <!-- Search Box with Icon -->
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" class="search-input" id="searchInput" name="company_name" placeholder="Search company..." value="{{ query }}">
             </div>
-            <!-- Search Button Form -->
             <div>
                 <br>
                 <button type="submit" class="form-button">Search</button>
@@ -390,7 +366,6 @@
         </form>
     </div>
 
-    <!-- Search Results Section -->
 <!-- Search Results Section -->
 <div class="table-container">
     {% if query %}
@@ -425,14 +400,6 @@
 </div>
 
 <script>
-        // Logout button functionality
-        document.getElementById('logoutButton').addEventListener('click', function() {
-            if (confirm('Are you sure you want to logout?')) {
-                alert('Logged out successfully!');
-            }
-        });
-
 </script>
-
 </body>
 </html>
