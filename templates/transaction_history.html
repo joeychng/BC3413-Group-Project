@@ -16,7 +16,7 @@
             <a href="/dashboard" class="nav-button" id="backButton">
                 <i class="fas fa-arrow-left"></i> Back
             </a>
-            <a href="/dashboard" class="nav-button">
+            <a href="{{ url_for('dashboard', username=session['login_username']) }}" class="nav-button">
                 <i class="fas fa-chart-pie"></i> Dashboard
             </a>
             <a href="/logout" class="logout-button">
