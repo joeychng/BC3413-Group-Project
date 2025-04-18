@@ -5,12 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Information</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@500;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/static/navigation_bar.css">
     <style>
-        :root {
-            --primary: #0044cc;
-            --primary-dark: #143bb5;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1e429f;
+            --primary-light: #3b82f6;
+            --primary-lighter: #93c5fd;
+            --primary-lightest: #dbeafe;
+            --text-on-primary: #ffffff;
+            --success: #10b981;
+            --danger: #ef4444;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+        }
         body {
             margin: 0;
             width: 100%;
@@ -22,99 +44,27 @@
             align-items: center;
             position: relative;
         }
-
-        /* Banner (Ensures Background Stays) */
+        
         .banner {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: 350px; /* Adjust height for better visibility */
+            height: 350px; 
             background: url('https://i.pinimg.com/736x/eb/93/f9/eb93f90b67e0022291381d4f429e4905.jpg') no-repeat center center/cover;
-            z-index: -1; /* Push behind other content */
+            z-index: -1; 
         }
 
-        /* Top Navigation Bar */
-        .top_nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 30px;
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(26, 86, 219, 0.1);
-            border-radius: 12px;
-            max-width: 1200px;
-            margin: 20px auto;
-            width: 100%;
-        }
-
-        .nav_logo {
-            font-size: 20px;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-left: 15px;
-        }
-
-        .nav_actions {
-            display: flex;
-            justify-content: center;
-            flex-grow: 1;
-        }
-
-        .logout_button {
-          padding: 10px 16px;
-          background-color: var(--primary);
-          color: white;
-          border: none;
-          border-radius: 8px;
-          font-size: 14px;
-          font-weight: 500;
-          cursor: pointer;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          transition: all 0.2s ease;
-        }
-
-        .logout_button:hover {
-          background-color: var(--primary-dark);
-          transform: translateY(-1px);
-        }
-
-        .back_button {
-            padding: 10px 16px;
-            background-color: #f0f0f0;
-            color: #333;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: fixed;  /* Fixed button at the bottom */
-            bottom: 20px;
-            left: 20px;       /* Positioned at the left */
-            transition: all 0.2s ease;
-        }
-
-        .back_button:hover {
-            background-color: #e0e0e0;
-        }
-
-        /* Container */
         .container {
-            width: 800px;
+            position: absolute;
+            left: 13%;
+            width: 1000px;
             background: white;
             border-radius: 8px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             padding: 40px;
             text-align: center;
-            margin-top: 200px; /* Ensures content isn't covered by banner */
+            margin-top: 700px;
         }
 
         h2 {
@@ -155,15 +105,13 @@
         select {
             background: white;
         }
-
-        /* Result Display */
+        
         .result {
             margin-top: 20px;
             font-size: 18px;
-            display: none; /* Hide by default */
+            display: none; 
         }
-
-        /* Responsive */
+        
         @media (max-width: 768px) {
             .container {
                 width: 90%;
@@ -173,25 +121,31 @@
     </style>
 </head>
 <body>
-    <!-- Top Navigation Bar with Back and Logout Buttons -->
-    <div class="top_nav">
-        <div class="nav_logo">
+    <div class="nav-bar">
+        <div class="nav-logo">
             <i class="fas fa-chart-line"></i> EasyFinance
         </div>
-        <div class="na_actions">
-            <button id="logoutButton" class="logout_button">
-            <i class="fas fa-sign-out-alt"></i> Logout
-            </button>
+        <div class="nav-actions">
+            <a href="javascript:history.back()" class="nav-button">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+            <a href="javascript:history.back()" class="nav-button">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </a>
+             <form action="{{ url_for('logout') }}" method="POST" style="display:inline;">
+                <button type="submit" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i>Logout
+                </button>
+            </form>
         </div>
-    </div>
 
     <!-- Banner (Background Image) -->
     <div class="banner"></div>
 
     <!-- Stock Information Form -->
     <div class="container">
-        <h2>Risk Tolerance Profile for {{ username }}</h2>
-        <p><strong>Current Risk Tolerance:</strong> <span id="current_risk_tolerance">{{ risk_tolerance }}</span></p>
+        <h2>Risk Tolerance Profile for {{ username }}</h2><br>
+        <p><strong>Current Risk Tolerance: <span id="current_risk_tolerance" style="color: #1e429f;">{{ risk_tolerance }}</span></strong></p>
         <form id="risk_tolerance-form" action="{{ url_for('risk_tolerance', username=session.get('login_username')) }}" method="POST">
             <div class="form-group">
                 <label for="risk_tolerance">Update your risk tolerance:</label>
@@ -205,11 +159,5 @@
             </div>
         </form>
     </div>
-
-    <!-- Back Button -->
-    <button class="back-button" onclick="window.history.go(-2)">
-        <i class="fas fa-arrow-left"></i> Back
-    </button>
-
 </body>
 </html>
