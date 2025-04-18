@@ -412,10 +412,11 @@ def removestock():
     return render_template('removestock.html')
 
 #Transaction history --------------------------------------------------------------------------------------------------
-@app.route('/transaction_history')
-def transaction_history():
-    session['username'] = 'mary'
-    conn = init_db()
+@app.route('/dashboard/<username>/transaction_history')
+def transaction_history(username):
+    user = User()
+    username = session.get('login_username')
+    conn = sqlite3.connect(DB_NAME)
     cursor = conn.cursor()
     cursor.execute('''
         SELECT purchase_date, ticker, shares, purchase_price,
@@ -423,7 +424,7 @@ def transaction_history():
         FROM portfolios
         WHERE username = ?
         ORDER BY purchase_date DESC
-    ''', (session['username'],))
+    ''', (session['login_username'],))
 
     rows = cursor.fetchall()
     conn.close()
@@ -447,7 +448,7 @@ def transaction_history():
             'unrealised_pl': round(unrealised_pl, 2) if not sell_price else ''
         })
 
-    return render_template("transaction_history.html", transactions=data)
+    return render_template("transaction_history.html", transactions=data, username = username)
 
 #Stock Information--------------------------------------------------------------------------------------------------
 def fetch_stock_data(ticker):
